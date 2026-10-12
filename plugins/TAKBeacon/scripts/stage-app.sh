@@ -12,6 +12,10 @@
 # signer unless --allow-test-signer is given.
 set -euo pipefail
 
+# Google Play app signing key for com.taksolutions.takbeacon (Play Console,
+# Test and release, App integrity). A public certificate hash, not a secret.
+TAKBEACON_PLAY_SIGNER="${TAKBEACON_PLAY_SIGNER:-1D:62:9D:38:59:A1:E3:A8:E7:29:CE:3E:8A:E7:88:B6:88:BA:18:34:B3:EB:76:30:B8:8F:BC:BC:E5:D2:1C:42}"
+
 apk="${1:?usage: stage-app.sh <apk> [--allow-test-signer]}"
 allow_test="${2:-}"
 cd "$(dirname "$0")/.."
