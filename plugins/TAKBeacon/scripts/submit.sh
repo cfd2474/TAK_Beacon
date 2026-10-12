@@ -107,5 +107,5 @@ for atak in $TARGETS; do
     size=$(wc -c < "$zipfile" | tr -d ' ')
     [ "$size" -lt 16000000 ] || { echo "  FAIL  zip is $size bytes" >&2; exit 1; }
     echo "  PASS  $zipfile ($((size / 1024)) KB), app sha256 $apk_sha"
-    [ "$DRY" = 1 ] && mv "$zipfile" "${zipfile%.zip}-DRYRUN-DO-NOT-SUBMIT.zip"
+    if [ "$DRY" = 1 ]; then mv "$zipfile" "${zipfile%.zip}-DRYRUN-DO-NOT-SUBMIT.zip"; fi
 done

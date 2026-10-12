@@ -25,8 +25,7 @@ captures/
 .externalNativeBuild/
 .cxx/
 *.apk
-# ...except the Play-signed TAK Beacon app the plugin installs (see README).
-!app/src/main/assets/takbeacon.apk
+# (this includes app/src/main/assets/takbeacon.apk: staged at release time, never committed)
 *.aab
 
 # IDE

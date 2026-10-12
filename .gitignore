@@ -33,9 +33,8 @@ dist/
 *.apk
 *.aab
 *.zip
-# The plugin's embedded app is the one APK that is committed, and only when it
-# is the Play-signed release (plugins/TAKBeacon/scripts/stage-app.sh checks).
-!plugins/TAKBeacon/app/src/main/assets/takbeacon.apk
+# The plugin's embedded app is never committed either: stage-app.sh copies the
+# Play-signed APK (kept in ~/atak-dist/takbeacon-app/) in before submit.sh runs.
 # Built from docs/user_manual at build time
 usermanual.pdf
 

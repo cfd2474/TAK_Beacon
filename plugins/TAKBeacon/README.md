@@ -90,7 +90,9 @@ _________________________________________________________________
 DEVELOPER NOTES
 
   - app/src/main/assets/takbeacon.apk is the TAK Beacon app exactly as Google
-    Play signs it (Play App Signing), not built from this tree. It is a
+    Play signs it (Play App Signing), not built from this tree. It is staged
+    into the submission by scripts/stage-app.sh, which checks the package and
+    the Play app signing certificate, and is not kept in the source repo. It is a
     separate application (package com.taksolutions.takbeacon) with its own
     signing certificate, distinct from this plugin's. The plugin never loads
     or executes it: AppInstaller copies it to ATAK's cache and hands it to

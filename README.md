@@ -46,7 +46,8 @@ data package format. Keep it that way; it matters for the tak.gov submission.
 ## Release order
 
 1. App → Google Play ([docs/play-release.md](docs/play-release.md)).
-2. Download the Play-signed universal APK, then stage it into the plugin:
+2. Download the Play-signed universal APK (App bundle explorer, Signed universal
+   APK), keep it in `~/atak-dist/takbeacon-app/`, then stage it into the plugin:
    `plugins/TAKBeacon/scripts/stage-app.sh <apk>` (it checks the app is signed by Play's app signing key, `1D:62:9D:…:1C:42`).
 3. `plugins/TAKBeacon/scripts/submit.sh` builds one tak.gov zip per ATAK target
    in `~/atak-dist/`, running every atak-plugin-pipeline gate.
