@@ -1,12 +1,22 @@
 # TAK Beacon
 
+**Download the TAK Beacon 1.0.0 ATAK plugin** (pick the one matching your ATAK-CIV version, sideload, then load it in ATAK's Plugins manager):
+
+- **ATAK-CIV 5.6:** https://github.com/cfd2474/TAK_Beacon/releases/download/v1.0.0/ATAK-Plugin-TAKBeacon-1.0.0--5.6.0-civ-release.apk
+- **ATAK-CIV 5.7:** https://github.com/cfd2474/TAK_Beacon/releases/download/v1.0.0/ATAK-Plugin-TAKBeacon-1.0.0--5.7.0-civ-release.apk
+- **ATAK-CIV 5.8:** https://github.com/cfd2474/TAK_Beacon/releases/download/v1.0.0/ATAK-Plugin-TAKBeacon-1.0.0--5.8.0-civ-release.apk
+
+All releases: https://github.com/cfd2474/TAK_Beacon/releases
+
+The plugin installs the TAK Beacon app for you. User guide: [plugins/TAKBeacon/docs/USER_GUIDE.md](plugins/TAKBeacon/docs/USER_GUIDE.md)
+
 A lightweight position beacon for the TAK ecosystem, plus an ATAK plugin that
 installs and drives it.
 
 | Part | Path | Status |
 |---|---|---|
-| **TAK Beacon app** (`com.taksolutions.takbeacon`) | [tracker/](tracker/) | Builds; tested end to end on an emulator |
-| **ATAK plugin** (`com.taksolutions.takbeacon.plugin`) | [plugins/TAKBeacon/](plugins/TAKBeacon/) | Builds for ATAK-CIV 5.6.0 / 5.7.0 / 5.8.0; tested on the 5.8.0 SDK build |
+| **TAK Beacon app** (`com.taksolutions.takbeacon`) | [tracker/](tracker/) | v1.0.0 on Google Play (Play App Signing) |
+| **ATAK plugin** (`com.taksolutions.takbeacon.plugin`) | [plugins/TAKBeacon/](plugins/TAKBeacon/) | v1.0.0 released: signed by tak.gov for ATAK-CIV 5.6.0 / 5.7.0 / 5.8.0 |
 | Icons | [branding/](branding/) | `python -I branding/make_icons.py` regenerates every size |
 
 ## The app
