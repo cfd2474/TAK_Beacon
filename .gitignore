@@ -1,0 +1,47 @@
+# ---- Secrets and machine-local config (this repository is PUBLIC) ----
+local.properties
+keystore.properties
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.key
+*.env
+.env*
+google-services.json
+play-service-account*.json
+# Claude Code machine-local settings
+.claude/settings.local.json
+
+# ---- ATAK SDK artifacts: the SDK license forbids redistributing them ----
+main.jar
+atak.apk
+atak-javadoc.jar
+atak-gradle-takdev.jar
+android_keystore
+.takdev/
+
+# ---- Build output ----
+build/
+.gradle/
+.kotlin/
+.cxx/
+.externalNativeBuild/
+captures/
+dist/
+*.apk
+*.aab
+*.zip
+# The plugin's embedded app is the one APK that is committed, and only when it
+# is the Play-signed release (plugins/TAKBeacon/scripts/stage-app.sh checks).
+!plugins/TAKBeacon/app/src/main/assets/takbeacon.apk
+# Built from docs/user_manual at build time
+usermanual.pdf
+
+# ---- IDE / OS ----
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db

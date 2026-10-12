@@ -1,0 +1,13 @@
+* text=auto
+# Executed on Linux by tak.gov and CI: must keep LF on every checkout.
+gradlew text eol=lf
+*.sh text eol=lf
+*.gradle text eol=lf
+*.properties text eol=lf
+*.bat text eol=crlf
+# Binary
+*.png binary
+*.webp binary
+*.jar binary
+*.otf binary
+*.apk binary

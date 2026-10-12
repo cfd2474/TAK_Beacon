@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Compose draws everything; this only sets the window before first frame. -->
+    <style name="Theme.TAKBeacon" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#0B0E11</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+</resources>

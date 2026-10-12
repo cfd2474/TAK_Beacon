@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ATAK reaches a plugin's manual only through its Tool Preferences entry. -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <com.atakmap.android.gui.PanPreference
+        android:key="manual"
+        android:title="@string/manual_title"
+        android:summary="@string/manual_summary" />
+
+</PreferenceScreen>

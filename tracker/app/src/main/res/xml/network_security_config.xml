@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Map tiles and enrollment use HTTPS only. TAK streaming connections are raw
+     sockets and are not governed by this file. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>

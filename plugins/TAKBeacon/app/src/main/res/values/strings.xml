@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TAK Beacon</string>
+    <string name="app_desc">Installs and controls the TAK Beacon position reporter, and shares this ATAK\'s server connection with it.</string>
+
+    <string name="section_app">TAK Beacon app</string>
+    <string name="section_beacon">Beacon</string>
+    <string name="section_server">Server</string>
+    <string name="install">Install TAK Beacon</string>
+    <string name="update">Update TAK Beacon</string>
+    <string name="uninstall">Uninstall other build</string>
+    <string name="open_app">Open TAK Beacon</string>
+    <string name="start">Start beacon</string>
+    <string name="stop">Stop beacon</string>
+    <string name="share_server">Send a server to TAK Beacon</string>
+    <string name="share_server_hint">Gives TAK Beacon the connection ATAK uses, with its certificates, so the beacon reports to the same server under your callsign.</string>
+    <string name="pause_hint">While ATAK is open, TAK Beacon can pause so you are not on the map twice. Turn it on in TAK Beacon: Settings, ATAK.</string>
+
+    <string name="prefs_summary">TAK Beacon user manual</string>
+    <string name="manual_title">User manual</string>
+    <string name="manual_summary">How to install, connect and use TAK Beacon</string>
+</resources>

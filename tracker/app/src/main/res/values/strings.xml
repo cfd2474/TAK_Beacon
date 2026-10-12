@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TAK Beacon</string>
+    <string name="channel_tracking">Position reporting</string>
+    <string name="channel_alerts">Alerts</string>
+    <string name="notif_stop">Stop</string>
+    <string name="notif_resume">Resume</string>
+</resources>
