@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -40,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.taksolutions.takbeacon.BuildConfig
 import com.taksolutions.takbeacon.data.BeaconSettings
@@ -121,6 +123,64 @@ fun SettingsScreen(
                 listOf(60, 120, 300, 600, 1800).forEach { sec ->
                     FilterChip(s.staleSeconds == sec, { onChange { it.copy(staleSeconds = sec) } }, { Text("${sec / 60}m") },
                         enabled = sec >= s.intervalSeconds * 2)
+                }
+            }
+        }
+
+        Section("Satellite") {
+            ToggleRow(
+                "Use satellite data",
+                "Keep reporting over satellite (such as T-Mobile T-Satellite) when it is the only network. " +
+                    "Reports slow down to save data and the map preview turns off. Emergencies are always sent.",
+                s.satelliteData,
+            ) { v -> onChange { it.copy(satelliteData = v) } }
+            if (s.satelliteData) {
+                Spacer(Modifier.height(8.dp))
+                Text("Report over satellite every", style = MaterialTheme.typography.labelLarge)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(30, 60, 120, 300, 600).forEach { sec ->
+                        FilterChip(s.satelliteIntervalSeconds == sec, { onChange { it.copy(satelliteIntervalSeconds = sec) } },
+                            { Text(if (sec < 60) "${sec}s" else "${sec / 60}m") })
+                    }
+                }
+            }
+        }
+
+        Section("UDP broadcast") {
+            ToggleRow(
+                "Broadcast position over UDP",
+                "Also send each report as CoT over UDP, for ATAK and other TAK clients on the same network or mesh. " +
+                    "Not encrypted: anyone on the network can see it.",
+                s.udpBroadcast,
+            ) { v -> onChange { it.copy(udpBroadcast = v) } }
+            if (s.udpBroadcast) {
+                var host by remember(s.udpHost) { mutableStateOf(s.udpHost) }
+                var port by remember(s.udpPort) { mutableStateOf(s.udpPort.toString()) }
+                val validPort = port.toIntOrNull()?.let { it in 1..65535 } == true
+                val validHost = host.isNotBlank() && host.all { it.isLetterOrDigit() || it in ".-:" }
+                val changed = host != s.udpHost || port != s.udpPort.toString()
+                val save = { if (changed && validHost && validPort) onChange { it.copy(udpHost = host, udpPort = port.toInt()) } }
+                // The keyboard's Done saves too, so an edit isn't lost by leaving the screen.
+                val done = KeyboardActions(onDone = { save() })
+                Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(host, { host = it.trim().take(253) }, label = { Text("Address") }, singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
+                        keyboardActions = done, isError = !validHost, modifier = Modifier.weight(2f))
+                    OutlinedTextField(port, { port = it.filter(Char::isDigit).take(5) }, label = { Text("Port") }, singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                        keyboardActions = done, isError = !validPort, modifier = Modifier.weight(1f))
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "Default ${BeaconSettings.DEFAULT_UDP_HOST}:${BeaconSettings.DEFAULT_UDP_PORT} is ATAK's SA multicast.",
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f),
+                    )
+                    TextButton(onClick = {
+                        onChange { it.copy(udpHost = BeaconSettings.DEFAULT_UDP_HOST, udpPort = BeaconSettings.DEFAULT_UDP_PORT) }
+                    }) { Text("Default") }
+                    TextButton(enabled = changed && validHost && validPort, onClick = save) { Text("Save") }
                 }
             }
         }

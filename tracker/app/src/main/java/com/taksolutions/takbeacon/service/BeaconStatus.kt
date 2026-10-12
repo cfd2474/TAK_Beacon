@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-enum class RunState { STOPPED, WAITING_FOR_FIX, TRANSMITTING, PAUSED_FOR_ATAK, NO_SERVERS }
+enum class RunState { STOPPED, WAITING_FOR_FIX, TRANSMITTING, PAUSED_FOR_ATAK, PAUSED_SATELLITE, NO_SERVERS }
 
 data class TrackerState(
     val runState: RunState = RunState.STOPPED,
@@ -15,6 +15,11 @@ data class TrackerState(
     val lastSentMs: Long? = null,
     val emergency: EmergencyType? = null,
     val batteryPct: Int? = null,
+    /** On a constrained satellite network (e.g. T-Mobile T-Satellite). */
+    val onSatellite: Boolean = false,
+    /** Seconds between reports right now (slower over satellite). */
+    val effectiveIntervalSeconds: Int? = null,
+    val udpError: String? = null,
 )
 
 /** Process-wide tracker state, written by [BeaconService], read by the UI and the ATAK bridge. */

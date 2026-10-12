@@ -32,6 +32,8 @@ import com.taksolutions.takbeacon.cot.Identity
 import com.taksolutions.takbeacon.data.BeaconSettings
 import com.taksolutions.takbeacon.data.EmergencyType
 import com.taksolutions.takbeacon.geo.Coordinates
+import com.taksolutions.takbeacon.net.NetworkWatcher
+import com.taksolutions.takbeacon.net.UdpBroadcaster
 import com.taksolutions.takbeacon.ui.MainActivity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.combine
@@ -49,6 +51,8 @@ class BeaconService : LifecycleService() {
     private lateinit var locationManager: LocationManager
     private var wakeLock: PowerManager.WakeLock? = null
     private var sos: VolumeSosDetector? = null
+    private var network: NetworkWatcher? = null
+    private var udp: UdpBroadcaster? = null
 
     @Volatile private var settings: BeaconSettings? = null
     @Volatile private var lastFix: Fix? = null
@@ -102,12 +106,18 @@ class BeaconService : LifecycleService() {
         BeaconStatus.update { it.copy(runState = RunState.WAITING_FOR_FIX) }
         lifecycleScope.launch { app.settings.update { it.copy(wasRunning = true) } }
 
+        network = NetworkWatcher(this).also { w ->
+            w.start()
+            lifecycleScope.launch { w.onSatellite.collect { sat -> BeaconStatus.update { it.copy(onSatellite = sat) } } }
+        }
+
         lifecycleScope.launch {
             app.settings.settings.combine(app.servers.servers) { s, list -> s to list }.collect { (s, list) ->
                 val prevSos = settings?.volumeSos
                 settings = s
                 app.connections.sync(list, lifecycleScope)
                 if (prevSos != s.volumeSos) toggleSos(s.volumeSos)
+                toggleUdp(s.udpBroadcast)
             }
         }
         lifecycleScope.launch { tickLoop() }
@@ -126,28 +136,33 @@ class BeaconService : LifecycleService() {
         val fix = lastFix
         val state = BeaconStatus.state.value
         val emergency = state.emergency
-        val paused = emergency == null && s.atakAutoPause && BeaconStatus.atakInForeground(now)
         val serverCount = app.servers.servers.value.count { it.enabled && !it.needsEnrollment }
-
-        val runState = when {
-            serverCount == 0 -> RunState.NO_SERVERS
-            paused -> RunState.PAUSED_FOR_ATAK
-            fix == null -> RunState.WAITING_FOR_FIX
-            else -> RunState.TRANSMITTING
-        }
+        val onSatellite = state.onSatellite
+        val runState = ReportPolicy.runState(
+            s, serverCount, hasFix = fix != null, atakInFront = BeaconStatus.atakInForeground(now),
+            onSatellite = onSatellite, emergency = emergency != null,
+        )
+        val interval = ReportPolicy.intervalSeconds(s, onSatellite)
         val battery = batteryPct()
 
-        if (runState == RunState.TRANSMITTING && fix != null && now - lastPliElapsed >= s.intervalSeconds * 1000L) {
+        if (runState == RunState.TRANSMITTING && fix != null && now - lastPliElapsed >= interval * 1000L) {
             lastPliElapsed = now
-            app.connections.broadcast(Cot.pli(identity(s), fix, s.staleSeconds, battery))
+            // Over satellite the marker must outlive the slower reporting.
+            val stale = if (onSatellite) maxOf(s.staleSeconds, interval * 3) else s.staleSeconds
+            send(Cot.pli(identity(s), fix, stale, battery))
             BeaconStatus.update { it.copy(lastSentMs = System.currentTimeMillis()) }
         }
         // Keep an active emergency alive on the map.
         if (emergency != null && fix != null && now - lastEmergencyElapsed >= EMERGENCY_REPEAT_MS) {
             lastEmergencyElapsed = now
-            app.connections.broadcast(Cot.emergency(identity(s), fix, emergency))
+            send(Cot.emergency(identity(s), fix, emergency))
         }
-        BeaconStatus.update { it.copy(runState = runState, batteryPct = battery) }
+        BeaconStatus.update {
+            it.copy(
+                runState = runState, batteryPct = battery, effectiveIntervalSeconds = interval,
+                udpError = if (s.udpBroadcast) udp?.lastError?.value else null,
+            )
+        }
         updateNotification(runState, s)
     }
 
@@ -182,8 +197,8 @@ class BeaconService : LifecycleService() {
         val fix = lastFix
         if (s != null && fix != null) {
             lastEmergencyElapsed = SystemClock.elapsedRealtime()
-            app.connections.broadcast(Cot.emergency(identity(s), fix, type))
-            app.connections.broadcast(Cot.pli(identity(s), fix, s.staleSeconds, batteryPct()))
+            send(Cot.emergency(identity(s), fix, type))
+            send(Cot.pli(identity(s), fix, s.staleSeconds, batteryPct()))
         }
         vibrate(longArrayOf(0, 400, 150, 400, 150, 400))
     }
@@ -192,10 +207,26 @@ class BeaconService : LifecycleService() {
         val s = settings
         val fix = lastFix
         if (BeaconStatus.state.value.emergency != null && s != null && fix != null) {
-            app.connections.broadcast(Cot.emergencyCancel(identity(s), fix))
+            send(Cot.emergencyCancel(identity(s), fix))
         }
         BeaconStatus.update { it.copy(emergency = null) }
         vibrate(longArrayOf(0, 120))
+    }
+
+    /** To every connected TAK server and, when enabled, the UDP destination. */
+    private fun send(xml: String) {
+        app.connections.broadcast(xml)
+        val s = settings ?: return
+        if (s.udpBroadcast) udp?.send(s.udpHost, s.udpPort, xml)
+    }
+
+    private fun toggleUdp(enabled: Boolean) {
+        if (enabled && udp == null) {
+            udp = runCatching { UdpBroadcaster().also { it.start(lifecycleScope) } }.getOrNull()
+        } else if (!enabled && udp != null) {
+            udp?.stop()
+            udp = null
+        }
     }
 
     private fun toggleSos(enabled: Boolean) {
@@ -224,10 +255,12 @@ class BeaconService : LifecycleService() {
         val text = when (state) {
             RunState.TRANSMITTING -> {
                 val f = lastFix
-                "${s.callsign} · $connected connected · " + (f?.let { Coordinates.format(it.lat, it.lon, s.coordFormat) } ?: "")
+                (if (BeaconStatus.state.value.onSatellite) "Satellite · " else "") +
+                    "${s.callsign} · $connected connected · " + (f?.let { Coordinates.format(it.lat, it.lon, s.coordFormat) } ?: "")
             }
             RunState.WAITING_FOR_FIX -> "Waiting for GPS fix"
             RunState.PAUSED_FOR_ATAK -> "Paused — ATAK is reporting your position"
+            RunState.PAUSED_SATELLITE -> "Paused on satellite — satellite data is off in Settings"
             RunState.NO_SERVERS -> "No servers configured"
             RunState.STOPPED -> "Stopped"
         }.let { t -> BeaconStatus.state.value.emergency?.let { "EMERGENCY: ${it.label} · $t" } ?: t }
@@ -280,9 +313,13 @@ class BeaconService : LifecycleService() {
         locationManager.removeUpdates(listener)
         sos?.stop()
         sos = null
+        network?.stop()
+        network = null
+        udp?.stop()
+        udp = null
         app.connections.stopAll()
         wakeLock?.takeIf { it.isHeld }?.release()
-        BeaconStatus.update { it.copy(runState = RunState.STOPPED, emergency = null) }
+        BeaconStatus.update { it.copy(runState = RunState.STOPPED, emergency = null, onSatellite = false) }
         super.onDestroy()
     }
 

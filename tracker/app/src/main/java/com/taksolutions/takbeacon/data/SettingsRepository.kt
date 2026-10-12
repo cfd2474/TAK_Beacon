@@ -35,6 +35,11 @@ class SettingsRepository(private val context: Context) {
         val SHOW_MAP = booleanPreferencesKey("show_map")
         val WAS_RUNNING = booleanPreferencesKey("was_running")
         val ATAK_SIGNER = stringPreferencesKey("trusted_atak_signer")
+        val SAT_DATA = booleanPreferencesKey("satellite_data")
+        val SAT_INTERVAL = intPreferencesKey("satellite_interval_s")
+        val UDP = booleanPreferencesKey("udp_broadcast")
+        val UDP_HOST = stringPreferencesKey("udp_host")
+        val UDP_PORT = intPreferencesKey("udp_port")
     }
 
     val settings: Flow<BeaconSettings> = context.settingsStore.data.map(::settingsFrom)
@@ -72,6 +77,11 @@ class SettingsRepository(private val context: Context) {
             p[K.SHOW_MAP] = n.showMap
             p[K.WAS_RUNNING] = n.wasRunning
             if (n.trustedAtakSigner == null) p.remove(K.ATAK_SIGNER) else p[K.ATAK_SIGNER] = n.trustedAtakSigner
+            p[K.SAT_DATA] = n.satelliteData
+            p[K.SAT_INTERVAL] = n.satelliteIntervalSeconds.coerceIn(MIN_INTERVAL, MAX_INTERVAL)
+            p[K.UDP] = n.udpBroadcast
+            p[K.UDP_HOST] = n.udpHost.trim().ifEmpty { BeaconSettings.DEFAULT_UDP_HOST }
+            p[K.UDP_PORT] = n.udpPort.coerceIn(1, 65535)
         }
     }
 
@@ -92,6 +102,11 @@ class SettingsRepository(private val context: Context) {
         showMap = p[K.SHOW_MAP] ?: true,
         wasRunning = p[K.WAS_RUNNING] ?: false,
         trustedAtakSigner = p[K.ATAK_SIGNER],
+        satelliteData = p[K.SAT_DATA] ?: true,
+        satelliteIntervalSeconds = p[K.SAT_INTERVAL] ?: 60,
+        udpBroadcast = p[K.UDP] ?: false,
+        udpHost = p[K.UDP_HOST] ?: BeaconSettings.DEFAULT_UDP_HOST,
+        udpPort = p[K.UDP_PORT] ?: BeaconSettings.DEFAULT_UDP_PORT,
     )
 
     companion object {

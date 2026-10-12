@@ -84,6 +84,19 @@ If a server presents a certificate the device does not recognise, TAK Beacon sho
 ]
 
 #tak-slide[
+= Satellite (T-Mobile T-Satellite)
+#block()
+TAK Beacon is satellite-ready: when satellite is the only network, it keeps reporting at a slower satellite rate (1 minute by default) and turns its map preview off to save data. The pane and the app say *Via satellite* while this is happening. Emergencies are always sent. Turn satellite data off, or change its rate, in TAK Beacon *Settings, Satellite*.
+
+]
+
+#tak-slide[
+= UDP broadcast
+#block()
+TAK Beacon can also send each report as CoT over UDP, so ATAK and other TAK clients on the same Wi-Fi or mesh see you without a server. It is off by default and is not encrypted. Turn it on in *Settings, UDP broadcast*; the default destination, 239.2.3.1:6969, is ATAK's situational-awareness multicast.
+]
+
+#tak-slide[
 = Troubleshooting
 #block()
 - *Connecting to app* never clears: open the TAK Beacon app once, then reopen this pane.
@@ -91,7 +104,10 @@ If a server presents a certificate the device does not recognise, TAK Beacon sho
 - *Reports stop with the screen off*: in Android settings set TAK Beacon's battery use to *Unrestricted* (TAK Beacon *Settings, Startup and battery*).
 - *Waiting for GPS*: TAK Beacon needs a location fix before it reports; check that location is on.
 
-== Network and privacy
+]
+
+#tak-slide[
+= Network and privacy
 #block()
-TAK Beacon sends your position only to the servers you add, on their streaming port (8089 TLS or 8087 TCP by default) and, during sign-in only, their enrollment port (8446). It does not listen for incoming connections. The plugin itself makes no network connections.
+TAK Beacon sends your position only to the servers you add, on their streaming port (8089 TLS or 8087 TCP by default) and, during sign-in only, their enrollment port (8446), plus the UDP destination if you turn UDP broadcast on. It does not listen for incoming connections. The plugin itself makes no network connections.
 ]

@@ -121,6 +121,7 @@ class BridgeService : Service() {
             putInt(BridgeProtocol.KEY_CONNECTED, app.connections.connectedCount())
             st.lastSentMs?.let { putLong(BridgeProtocol.KEY_LAST_SENT_MS, it) }
             st.emergency?.let { putString(BridgeProtocol.KEY_EMERGENCY, it.name) }
+            putBoolean(BridgeProtocol.KEY_SATELLITE, st.onSatellite)
             putBoolean(BridgeProtocol.KEY_TRUSTED, trusted != null && trusted.equals(caller.signerSha256, true))
         }
         send(replyTo, Message.obtain(null, BridgeProtocol.MSG_STATE).apply { data = b })

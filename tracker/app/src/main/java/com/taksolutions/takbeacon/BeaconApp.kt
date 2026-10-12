@@ -10,6 +10,8 @@ import com.taksolutions.takbeacon.enroll.DataPackageImporter
 import com.taksolutions.takbeacon.enroll.EnrollmentClient
 import com.taksolutions.takbeacon.net.ConnectionManager
 import com.taksolutions.takbeacon.security.CertStore
+import com.taksolutions.takbeacon.service.BeaconStatus
+import com.taksolutions.takbeacon.service.ReportPolicy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -44,7 +46,9 @@ class BeaconApp : Application() {
         settings = SettingsRepository(this)
         certs = CertStore(this)
         servers = ServerRepository(this, certs)
-        connections = ConnectionManager(certs) { uid }
+        connections = ConnectionManager(certs, { uid }) {
+            if (BeaconStatus.state.value.onSatellite) ReportPolicy.SATELLITE_PING_MS else ReportPolicy.PING_MS
+        }
         enrollment = EnrollmentClient(certs, BuildConfig.VERSION_NAME)
         dataPackages = DataPackageImporter(certs)
         // Identity must exist before anything is sent; this is a tiny one-time write.

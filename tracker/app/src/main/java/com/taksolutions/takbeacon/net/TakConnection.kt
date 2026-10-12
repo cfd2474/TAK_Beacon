@@ -41,6 +41,7 @@ class TakConnection(
     val server: ServerConfig,
     private val certs: CertStore,
     private val selfUid: () -> String,
+    private val pingIntervalMs: () -> Long,
     private val onStatus: (String, LinkStatus) -> Unit,
 ) {
     // Stale positions are worthless; keep only the newest few while offline.
@@ -108,7 +109,7 @@ class TakConnection(
     /** Writes queued events; pings when idle so dead links surface as write errors. */
     private suspend fun pump(out: OutputStream, reader: Job) {
         while (reader.isActive) {
-            val xml = withTimeoutOrNull(PING_INTERVAL_MS) { outbox.receive() } ?: Cot.ping(selfUid())
+            val xml = withTimeoutOrNull(pingIntervalMs()) { outbox.receive() } ?: Cot.ping(selfUid())
             out.write(xml.toByteArray(Charsets.UTF_8))
             out.flush()
             if (!xml.contains("type=\"t-x-c-t\"")) {
@@ -129,8 +130,6 @@ class TakConnection(
     }
 
     companion object {
-        private const val PING_INTERVAL_MS = 30_000L
-
         fun describe(e: Throwable): String = when {
             e is UnknownHostException -> "Unknown host"
             e is SSLHandshakeException && e.message?.contains("certificate_unknown", true) == true ->

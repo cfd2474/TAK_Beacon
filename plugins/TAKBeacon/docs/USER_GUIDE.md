@@ -106,6 +106,32 @@ In TAK Beacon, open **Servers**:
 If a server presents a certificate the device does not recognise, TAK Beacon
 shows its fingerprint and asks you to confirm it once.
 
+## 6. Satellite (T-Mobile T-Satellite)
+
+TAK Beacon is satellite-ready (Android's constrained satellite networks; it is
+listed under the phone's *Satellite connectivity → Supported apps*). When
+satellite is the only network:
+
+- it keeps reporting from its foreground service, at the slower **satellite
+  rate** (1 minute by default; Settings → Satellite), and markers stay on the
+  map longer to match;
+- it pings the server less often and turns the map preview off to save data;
+- the app, its notification and the ATAK pane say **Via satellite**.
+
+Emergencies are always sent over satellite. To keep TAK Beacon off satellite
+except for emergencies, turn off **Use satellite data**; it then shows *Paused
+on satellite* until a normal network returns.
+
+## 7. UDP broadcast (mesh SA)
+
+Off by default. In **Settings → UDP broadcast**, turn on **Broadcast position
+over UDP** to also send every report (and any emergency) as CoT over UDP, so
+ATAK and other TAK clients on the same Wi-Fi or mesh see you without a server.
+The default destination, `239.2.3.1:6969`, is ATAK's situational-awareness
+multicast; enter another address and port to send to a specific host. UDP works
+with no server configured. It is **not encrypted**: anyone on that network can
+read it.
+
 ## Troubleshooting
 
 - **"Connecting to app" never clears** — open the TAK Beacon app once, then
@@ -121,7 +147,8 @@ shows its fingerprint and asks you to confirm it once.
 
 TAK Beacon sends your position only to the servers you add: their streaming
 port (8089 TLS or 8087 TCP by default) and, during sign-in only, their
-enrollment port (8446). It does not listen for incoming connections. The ATAK
+enrollment port (8446); and, only if you turn UDP broadcast on, to its UDP
+destination (default 239.2.3.1:6969). It does not listen for incoming connections. The ATAK
 plugin itself makes no network connections.
 
 The same manual is inside the plugin: **Settings → Tool Preferences → Specific

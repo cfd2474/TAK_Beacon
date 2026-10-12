@@ -41,6 +41,14 @@
         android:networkSecurityConfig="@xml/network_security_config"
         tools:targetApi="36">
 
+        <!-- Satellite data opt-in (Android "constrained satellite networks"; T-Mobile
+             T-Satellite). Lets the beacon's foreground service report over satellite
+             when it is the only network, and lists the app under Satellite
+             connectivity > Supported apps. Behaviour on satellite: NetworkWatcher. -->
+        <meta-data
+            android:name="android.telephony.PROPERTY_SATELLITE_DATA_OPTIMIZED"
+            android:value="${applicationId}" />
+
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"

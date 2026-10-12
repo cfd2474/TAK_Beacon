@@ -172,11 +172,16 @@ final class BeaconPane implements BeaconBridge.Listener {
             if (s.emergency != null) setState("EMERGENCY ACTIVE", R.color.state_alert);
             else if ("TRANSMITTING".equals(run)) setState("Transmitting", R.color.state_live);
             else if ("PAUSED_FOR_ATAK".equals(run)) setState("Paused while ATAK is open", R.color.state_paused);
+            else if ("PAUSED_SATELLITE".equals(run)) setState("Paused on satellite", R.color.state_paused);
             else if ("WAITING_FOR_FIX".equals(run)) setState("Waiting for GPS", R.color.state_waiting);
             else if ("NO_SERVERS".equals(run)) setState("No servers", R.color.state_waiting);
             else setState("Off", R.color.state_off);
 
             final StringBuilder d = new StringBuilder();
+            if (s.satellite)
+                d.append("Via satellite: reports are slower to save data.\n");
+            if ("PAUSED_SATELLITE".equals(run))
+                d.append("Satellite data is off in TAK Beacon's Settings.\n");
             d.append(s.connected).append(" of ").append(s.servers).append(" server").append(s.servers == 1 ? "" : "s").append(" connected");
             if (s.lastSentMs > 0) {
                 final long ago = Math.max(0, (System.currentTimeMillis() - s.lastSentMs) / 1000);

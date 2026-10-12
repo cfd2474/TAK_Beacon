@@ -36,6 +36,11 @@ installs and drives it.
   tracking, and pause the beacon while ATAK is in front.
 - Team colour and role, DD/DMS/MGRS, an OpenStreetMap preview with a dark mode,
   kiosk lock, and start on boot.
+- **Satellite-ready** (T-Mobile T-Satellite / Android constrained satellite
+  networks), on by default: slower reporting and no map tiles over satellite,
+  emergencies always sent; can be turned off.
+- **UDP broadcast** (off by default): CoT over UDP to ATAK's SA multicast
+  `239.2.3.1:6969` or any host:port, for mesh and serverless use.
 - No Google Play services dependency: it runs on de-Googled fleet devices.
 
 ```bash

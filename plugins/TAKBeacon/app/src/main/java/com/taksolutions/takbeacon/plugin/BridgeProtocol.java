@@ -45,6 +45,7 @@ final class BridgeProtocol {
     static final String KEY_LAST_SENT_MS = "lastSentMs";
     static final String KEY_EMERGENCY = "emergency";
     static final String KEY_TRUSTED = "trusted";
+    static final String KEY_SATELLITE = "satellite";
     static final String KEY_MESSAGE = "message";
 
     /** RESULT text meaning: start me from a foreground Activity instead. */

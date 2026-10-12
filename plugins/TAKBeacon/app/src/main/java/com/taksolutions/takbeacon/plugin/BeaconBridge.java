@@ -40,6 +40,7 @@ final class BeaconBridge {
         long lastSentMs;
         String emergency;
         boolean trusted;
+        boolean satellite;
     }
 
     interface Listener {
@@ -255,6 +256,8 @@ final class BeaconBridge {
                 state.lastSentMs = b.getLong(BridgeProtocol.KEY_LAST_SENT_MS, 0L);
                 state.emergency = b.getString(BridgeProtocol.KEY_EMERGENCY);
                 state.trusted = b.getBoolean(BridgeProtocol.KEY_TRUSTED);
+                // Absent from apps before 1.1: reads as false.
+                state.satellite = b.getBoolean(BridgeProtocol.KEY_SATELLITE);
                 notifyState();
                 break;
             case BridgeProtocol.MSG_RESULT:

@@ -97,7 +97,21 @@ data class BeaconSettings(
     val wasRunning: Boolean = false,
     /** Signing certificate (SHA-256 hex) of the ATAK build the user trusted. */
     val trustedAtakSigner: String? = null,
-)
+    /** Report over satellite (e.g. T-Mobile T-Satellite) when it is the only network. */
+    val satelliteData: Boolean = true,
+    /** Slowest-of interval used while on a constrained satellite network. */
+    val satelliteIntervalSeconds: Int = 60,
+    /** Also send each report as CoT over UDP (mesh SA), unencrypted. */
+    val udpBroadcast: Boolean = false,
+    val udpHost: String = DEFAULT_UDP_HOST,
+    val udpPort: Int = DEFAULT_UDP_PORT,
+) {
+    companion object {
+        /** ATAK's default situational-awareness multicast group. */
+        const val DEFAULT_UDP_HOST = "239.2.3.1"
+        const val DEFAULT_UDP_PORT = 6969
+    }
+}
 
 /** TAK emergency types and their CoT event types. */
 enum class EmergencyType(val label: String, val cotType: String, val detailType: String) {

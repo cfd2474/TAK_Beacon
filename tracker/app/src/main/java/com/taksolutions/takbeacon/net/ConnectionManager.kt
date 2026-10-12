@@ -12,7 +12,11 @@ import kotlinx.coroutines.flow.update
  * Keeps one [TakConnection] per enabled server, rebuilding a connection when
  * its configuration changes. Statuses are published for the UI and the bridge.
  */
-class ConnectionManager(private val certs: CertStore, private val selfUid: () -> String) {
+class ConnectionManager(
+    private val certs: CertStore,
+    private val selfUid: () -> String,
+    private val pingIntervalMs: () -> Long,
+) {
 
     private val connections = mutableMapOf<String, TakConnection>()
     private val _status = MutableStateFlow<Map<String, LinkStatus>>(emptyMap())
@@ -32,7 +36,7 @@ class ConnectionManager(private val certs: CertStore, private val selfUid: () ->
         }
         for ((id, server) in wanted) {
             if (id !in connections) {
-                val conn = TakConnection(server, certs, selfUid) { sid, st ->
+                val conn = TakConnection(server, certs, selfUid, pingIntervalMs) { sid, st ->
                     // A late callback from a connection that was just replaced must not resurrect it.
                     synchronized(this) { if (connections[sid]?.server == server) _status.update { it + (sid to st) } }
                 }

@@ -71,7 +71,11 @@ PORTS REQUIRED
     - streaming CoT: TCP 8089 (TLS) or 8087 (plain TCP), or the port configured
     - certificate enrollment: TCP 8446 (HTTPS), only while signing in
     - map tiles: HTTPS 443 to tile.openstreetmap.org, only while its map
-      preview is shown
+      preview is shown (never over a satellite network)
+    - UDP broadcast, off by default: CoT datagrams to 239.2.3.1:6969 (ATAK SA
+      multicast, TTL 1) or a user-set host:port, unencrypted
+  Over a constrained satellite network (T-Mobile T-Satellite) it keeps
+  reporting at a reduced rate; this can be turned off in its settings.
   It has no inbound ports and no listening sockets.
 
 _________________________________________________________________

@@ -79,7 +79,7 @@ fun HomeScreen(
     val stateColor = when {
         tracker.emergency != null -> status.sos
         tracker.runState == RunState.TRANSMITTING -> status.live
-        tracker.runState == RunState.PAUSED_FOR_ATAK -> status.paused
+        tracker.runState == RunState.PAUSED_FOR_ATAK || tracker.runState == RunState.PAUSED_SATELLITE -> status.paused
         tracker.runState == RunState.STOPPED -> status.offline
         else -> status.waiting
     }
@@ -159,7 +159,14 @@ fun HomeScreen(
             }
         }
 
-        if (settings.showMap && fix != null) {
+        if (settings.showMap && fix != null && tracker.onSatellite) {
+            Section("Map") {
+                Text(
+                    "Map preview is off while on satellite to save data. Your position is still reported.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        } else if (settings.showMap && fix != null) {
             Section("Map") {
                 BeaconMap(
                     lat = fix.lat, lon = fix.lon, dark = settings.darkMap, color = stateColor,
@@ -250,6 +257,7 @@ private fun headline(s: RunState) = when (s) {
     RunState.WAITING_FOR_FIX -> "Acquiring GPS"
     RunState.TRANSMITTING -> "Transmitting"
     RunState.PAUSED_FOR_ATAK -> "Paused for ATAK"
+    RunState.PAUSED_SATELLITE -> "Paused on satellite"
     RunState.NO_SERVERS -> "No servers"
 }
 
@@ -261,9 +269,16 @@ private fun subline(t: TrackerState, s: BeaconSettings, servers: List<ServerConf
         RunState.NO_SERVERS -> "Enable or add a server to start reporting"
         RunState.WAITING_FOR_FIX -> "Waiting for a location fix · $connected/$enabled connected"
         RunState.PAUSED_FOR_ATAK -> "ATAK is open and reporting your position"
+        RunState.PAUSED_SATELLITE -> "On a satellite network, and satellite data is off in Settings"
         RunState.TRANSMITTING -> {
             val ago = t.lastSentMs?.let { "last report ${((now - it) / 1000).coerceAtLeast(0)}s ago" } ?: "first report pending"
-            "Every ${s.intervalSeconds}s · $connected/$enabled connected · $ago"
+            val every = t.effectiveIntervalSeconds ?: s.intervalSeconds
+            val where = listOfNotNull(
+                if (enabled > 0) "$connected/$enabled connected" else null,
+                if (s.udpBroadcast) "UDP ${s.udpHost}:${s.udpPort}" else null,
+            ).joinToString(" + ")
+            (if (t.onSatellite) "Via satellite · " else "") + "Every ${every}s · $where · $ago" +
+                (t.udpError?.let { "\nUDP: $it" } ?: "")
         }
     }
 }

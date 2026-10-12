@@ -81,6 +81,8 @@ will also refuse to update across the two signatures.
 | Background location (`ACCESS_BACKGROUND_LOCATION`) | Only for "Start on boot": resumes position reporting after a restart for dedicated tracking devices. Requested only when the user turns that on, after an in-app disclosure. |
 | Data safety | Precise location: collected, **shared** with servers the user configures (not with you), not used for ads, required for the app's core function. Device IDs: a random UID sent to the user's TAK server. |
 | Camera | QR code scanning for server enrollment, on-device only. |
+| Data safety: local network | If the user turns on UDP broadcast (off by default), precise location is sent unencrypted to the local network address they choose. User-initiated, for team situational awareness. |
+| Satellite | The manifest declares `PROPERTY_SATELLITE_DATA_OPTIMIZED` (T-Mobile T-Satellite requires target SDK 35+; the app targets 36). |
 | Prominent disclosure | Shown before every location request (`MainActivity` → "Share your location"). |
 
 If you'd rather not justify background location, delete the

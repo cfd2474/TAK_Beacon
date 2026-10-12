@@ -56,6 +56,7 @@ object BridgeProtocol {
     const val KEY_LAST_SENT_MS = "lastSentMs"
     const val KEY_EMERGENCY = "emergency"
     const val KEY_TRUSTED = "trusted"               // this ATAK is approved for profile pushes
+    const val KEY_SATELLITE = "satellite"           // on a constrained satellite network (protocol 1, app 1.1+)
     const val KEY_MESSAGE = "message"
 
     /** ATAK flavours whose calls are accepted at all. */
