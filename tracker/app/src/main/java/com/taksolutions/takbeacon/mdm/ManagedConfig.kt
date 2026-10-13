@@ -33,6 +33,8 @@ data class ManagedConfig(
     val callsign: String? = null,
     val team: Team? = null,
     val role: Role? = null,
+    /** CoT type (map symbol) of the position report. */
+    val cotType: String? = null,
     /** Turn the beacon on when the config arrives and on every boot (the user can still stop it). */
     val startBeacon: Boolean = false,
 ) {
@@ -46,6 +48,7 @@ data class ManagedConfig(
             if (!callsign.isNullOrBlank()) add(FIELD_CALLSIGN)
             if (team != null) add(FIELD_TEAM)
             if (role != null) add(FIELD_ROLE)
+            if (cotType != null) add(FIELD_COT_TYPE)
             if (startBeacon) add(FIELD_START_ON_BOOT)
         }
 
@@ -62,7 +65,7 @@ data class ManagedConfig(
     override fun toString(): String =
         "ManagedConfig(version=$version, server=${serverHost}:$serverPort/${transport.wire}, enroll=$enrollPort, " +
             "user=${enrollUsername != null}, password=${enrollPassword != null}, clientP12=${clientP12 != null}, " +
-            "trustP12=${trustP12 != null}, callsign=$callsign, team=$team, role=$role, startBeacon=$startBeacon)"
+            "trustP12=${trustP12 != null}, callsign=$callsign, team=$team, role=$role, cotType=$cotType, startBeacon=$startBeacon)"
 
     companion object {
         const val DEFAULT_PORT = 8089
@@ -72,6 +75,7 @@ data class ManagedConfig(
         const val FIELD_TEAM = "team"
         const val FIELD_ROLE = "role"
         const val FIELD_START_ON_BOOT = "start_on_boot"
+        const val FIELD_COT_TYPE = "cot_type"
 
         // Restriction keys (res/xml/app_restrictions.xml). Secrets contain "password"
         // so MDM consoles mask them.
@@ -92,6 +96,7 @@ data class ManagedConfig(
         const val K_TEAM = "team"
         const val K_ROLE = "role"
         const val K_START_BEACON = "start_beacon"
+        const val K_COT_TYPE = "cot_type"
 
         /**
          * Reads a restrictions bundle flattened to a map. Returns null when nothing usable
@@ -132,6 +137,7 @@ data class ManagedConfig(
                 team = str(K_TEAM)?.let { t -> Team.fromCot(t) ?: Team.entries.firstOrNull { it.name.equals(t, true) } },
                 role = str(K_ROLE)?.let { r -> Role.fromCot(r) ?: Role.entries.firstOrNull { it.name.equals(r, true) } },
                 startBeacon = bool(K_START_BEACON),
+                cotType = str(K_COT_TYPE)?.takeIf(com.taksolutions.takbeacon.data.BeaconSettings::validCotType),
             )
             return c.takeIf { it.hasServer || it.managedFields.isNotEmpty() || it.version != null }
         }

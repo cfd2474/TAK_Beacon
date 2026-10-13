@@ -44,6 +44,8 @@ class SettingsRepository(private val context: Context) {
         val PIN_SALT = stringPreferencesKey("lock_pin_salt")
         val LOCKED = booleanPreferencesKey("locked")
         val PERMS_PROMPTED = booleanPreferencesKey("permissions_prompted")
+        val COT_TYPE = stringPreferencesKey("pli_cot_type")
+        val UDP_WHEN_DISCONNECTED = booleanPreferencesKey("udp_only_when_disconnected")
     }
 
     val settings: Flow<BeaconSettings> = context.settingsStore.data.map(::settingsFrom)
@@ -94,6 +96,8 @@ class SettingsRepository(private val context: Context) {
             // No PIN, no lock: a lock nobody can open would brick the settings.
             p[K.LOCKED] = n.locked && n.pinHash != null
             p[K.PERMS_PROMPTED] = n.permissionsPrompted
+            p[K.COT_TYPE] = n.pliCotType.takeIf(BeaconSettings::validCotType) ?: BeaconSettings.DEFAULT_COT_TYPE
+            p[K.UDP_WHEN_DISCONNECTED] = n.udpOnlyWhenDisconnected
         }
     }
 
@@ -123,6 +127,8 @@ class SettingsRepository(private val context: Context) {
         pinSalt = p[K.PIN_SALT],
         locked = (p[K.LOCKED] ?: false) && p[K.PIN_HASH] != null,
         permissionsPrompted = p[K.PERMS_PROMPTED] ?: false,
+        pliCotType = p[K.COT_TYPE]?.takeIf(BeaconSettings::validCotType) ?: BeaconSettings.DEFAULT_COT_TYPE,
+        udpOnlyWhenDisconnected = p[K.UDP_WHEN_DISCONNECTED] ?: false,
     )
 
     companion object {

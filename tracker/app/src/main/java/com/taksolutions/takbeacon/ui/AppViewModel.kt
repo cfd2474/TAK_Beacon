@@ -91,6 +91,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun certSummary(id: String): String? = app.certs.clientSummary(id)
 
+    /** Reconnects a server now (after it stopped retrying on certificate failures). */
+    fun retryServer(id: String) { app.connections.retry(id) }
+
     // --- enrollment -----------------------------------------------------------
 
     fun showEnrollForm(request: EnrollRequest = EnrollRequest(host = "")) {
@@ -132,6 +135,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                             source = if (it.managed) it.source else r.server.source)
                     } ?: r.server
                     app.servers.upsert(server)
+                    // A new certificate: a server that stopped retrying gets another chance.
+                    app.connections.retry(server.id)
                     app.settings.update { cur ->
                         cur.copy(
                             callsign = req.callsign ?: cur.callsign,

@@ -96,6 +96,12 @@ background), so you are not on the map twice.
 Reporting resumes as soon as ATAK is closed or stops. An active
 emergency is never paused.
 
+### Map symbol
+
+**Settings → Reporting → Map symbol** sets how you appear on the map: *Ground
+unit* (the default, as ATAK reports itself), *Vehicle*, *Aircraft* or *Boat*.
+Your organization can also set it.
+
 ## 4. Emergencies
 
 Emergencies are sent from the TAK Beacon app, so they work with ATAK closed:
@@ -155,6 +161,10 @@ multicast; enter another address and port to send to a specific host. UDP works
 with no server configured. It is **not encrypted**: anyone on that network can
 read it.
 
+Turn on **Only when no server is connected** to send routine reports over UDP
+only while no TAK server is connected (so a connected phone isn't on the map
+twice). Emergencies always go over UDP when it is on.
+
 ## 8. Lock with a PIN
 
 Use the lock to keep a configured beacon exactly as it is (on a tracker issued
@@ -196,6 +206,10 @@ to someone, for example):
   reopen the pane.
 - **"Server rejected this device's certificate"** — send the server from ATAK
   again, or re-enroll it in TAK Beacon.
+- **"Stopped retrying"** on a server — after five certificate failures in a row
+  TAK Beacon stops reconnecting, so the server doesn't block the phone. Fix the
+  certificate (re-enroll, or send the server from ATAK again), then tap
+  **Retry**.
 - **Reports stop with the screen off** — allow TAK Beacon to run without
   battery restrictions (it asks when opened; or **Settings → Startup &
   battery**).

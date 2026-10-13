@@ -63,6 +63,7 @@ fun ServersScreen(
     managedProblem: String? = null,
     managedNeedsTrust: Boolean = false,
     onReviewTrust: (ServerConfig) -> Unit = {},
+    onRetry: (String) -> Unit = {},
 ) {
     var confirmDelete by remember { mutableStateOf<ServerConfig?>(null) }
     LazyColumn(
@@ -102,6 +103,7 @@ fun ServersScreen(
                 problem = if (s.managed) managedProblem else null,
                 needsTrust = s.managed && managedNeedsTrust,
                 onReviewTrust = { onReviewTrust(s) },
+                onRetry = { onRetry(s.id) },
             ) { confirmDelete = s }
         }
     }
@@ -137,6 +139,7 @@ private fun ServerCard(
     problem: String? = null,
     needsTrust: Boolean = false,
     onReviewTrust: () -> Unit = {},
+    onRetry: () -> Unit = {},
     onDelete: () -> Unit,
 ) {
     val c = BeaconTheme.status
@@ -177,6 +180,9 @@ private fun ServerCard(
                 modifier = Modifier.padding(top = 6.dp))
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            if (link?.suspended == true) {
+                TextButton(onClick = onRetry) { Text("Retry") }
+            }
             if (needsTrust) {
                 TextButton(onClick = onReviewTrust) { Text("Review certificate") }
             } else if (s.transport == Transport.SSL && (!s.managed || s.needsEnrollment)) {

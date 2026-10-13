@@ -17,7 +17,7 @@ val uploadKeyProps = Properties().apply {
 
 // versionCode is derived from versionName so that every release is an update
 // an MDM (and Play) will accept: MAJOR*1_000_000 + MINOR*1_000 + PATCH.
-val beaconVersion = "1.3.3"
+val beaconVersion = "1.3.4"
 val beaconVersionCode = beaconVersion.split(".").map { it.toInt() }
     .let { (maj, min, pat) -> maj * 1_000_000 + min * 1_000 + pat }
 

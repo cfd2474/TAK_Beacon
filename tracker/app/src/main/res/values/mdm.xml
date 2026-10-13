@@ -33,6 +33,8 @@
     <string name="mdm_team_desc">Team colour. Set here, the user cannot change it.</string>
     <string name="mdm_role_title">Role</string>
     <string name="mdm_role_desc">Team role. Set here, the user cannot change it.</string>
+    <string name="mdm_cot_type_title">Map symbol (CoT type)</string>
+    <string name="mdm_cot_type_desc">CoT type of the position report, for example a-f-G-U-C (ground unit, the default) or a-f-G-E-V-C (vehicle). Set here, the user cannot change it.</string>
     <string name="mdm_start_beacon_title">Start the beacon</string>
     <string name="mdm_start_beacon_desc">Turn the beacon on when this configuration arrives and whenever the device starts. The user can still stop it.</string>
 

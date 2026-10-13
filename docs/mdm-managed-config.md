@@ -33,6 +33,7 @@ the user's own setting.
 | `callsign` | string | | Set here, the user cannot change it. |
 | `team` | choice | | `White` … `Brown` (the TAK team colours). |
 | `role` | choice | | `Team Member`, `Team Lead`, `HQ`, `Sniper`, `Medic`, `Forward Observer`, `RTO`, `K9`. |
+| `cot_type` | string | `a-f-G-U-C` | Map symbol (CoT type) of position reports, e.g. `a-f-G-E-V-C` for a vehicle (1.3.4+). |
 | `start_beacon` | bool | false | Turn the beacon on when the configuration arrives and at every boot. The user can still stop it. |
 
 Keys holding secrets contain "password", so consoles that mask such keys (ATLAS
@@ -53,7 +54,7 @@ does) hide them.
   for the user to tap *Sign in*. A server whose certificate is not trusted by
   Android (self-signed, no `trust_p12_base64`) needs `server_cert_sha256`, or
   the user confirms its fingerprint once with *Review certificate*.
-- **Identity.** `callsign`, `team` and `role` replace the user's values and
+- **Identity.** `callsign`, `team`, `role` and `cot_type` replace the user's values and
   are shown read-only (*Set by your organization*). A server sent from ATAK's
   plugin does not change them either.
 - **Problems** (wrong password, unreachable server, a certificate that won't

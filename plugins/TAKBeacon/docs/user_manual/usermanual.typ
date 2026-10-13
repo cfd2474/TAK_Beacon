@@ -200,7 +200,7 @@ If a server presents a certificate the device does not recognise, TAK Beacon sho
 #toolbox.side-by-side(columns: (8fr, 3fr))[
 *Satellite (T-Mobile T-Satellite).* When satellite is the only network, TAK Beacon keeps reporting at a slower satellite rate (1 minute by default) and turns its map preview off to save data. The pane and the app say *Via satellite* while this is happening. Emergencies are always sent. Turn satellite data off, or change its rate, in *Settings, Satellite*.
 
-*UDP broadcast.* TAK Beacon can also send each report as CoT over UDP, so ATAK and other TAK clients on the same Wi-Fi or mesh see you without a server. It is off by default and is not encrypted. Turn it on in *Settings, UDP broadcast*; the default destination, 239.2.3.1:6969, is ATAK's situational-awareness multicast.
+*UDP broadcast.* TAK Beacon can also send each report as CoT over UDP, so ATAK and other TAK clients on the same Wi-Fi or mesh see you without a server. It is off by default and is not encrypted. Turn it on in *Settings, UDP broadcast*; the default destination, 239.2.3.1:6969, is ATAK's situational-awareness multicast. *Only when no server is connected* limits routine reports to times without a server; emergencies always go.
 ][
 #phone("screens/app_settings_satellite_udp.jpg")
 ]
@@ -241,7 +241,7 @@ If Android no longer shows the prompt (it was refused twice), TAK Beacon opens i
 #tak-slide[
 = Troubleshooting
 - *Connecting to app* never clears: tap *Start beacon* (it starts the app), or open the TAK Beacon app once, then reopen this pane.
-- *Server rejected this device's certificate*: send the server from ATAK again, or *Sign in* to it again in TAK Beacon.
+- *Server rejected this device's certificate*: send the server from ATAK again, or *Sign in* to it again in TAK Beacon. After five failures in a row it shows _Stopped retrying_: fix the certificate, then tap *Retry*.
 - *Reports stop with the screen off*: allow location *All the time*, and set TAK Beacon's battery use to *Unrestricted* (*Settings, Startup and battery*).
 - *Start or Stop does nothing*: TAK Beacon is locked; unlock it with its PIN.
 - *Waiting for GPS*: TAK Beacon needs a location fix before it reports; check that location is on.

@@ -46,11 +46,16 @@ class ConnectionManager(
         }
     }
 
+    /** [priority] for emergency alerts and cancels: sent first, never dropped for positions. */
     @Synchronized
-    fun broadcast(xml: String): Int {
-        connections.values.forEach { it.send(xml) }
+    fun broadcast(xml: String, priority: Boolean = false): Int {
+        connections.values.forEach { it.send(xml, priority) }
         return connections.size
     }
+
+    /** Resumes a server that stopped retrying after certificate failures (or cuts its backoff short). */
+    @Synchronized
+    fun retry(id: String) { connections[id]?.retryNow() }
 
     @Synchronized
     fun stopAll() {

@@ -338,6 +338,7 @@ class MainActivity : ComponentActivity() {
                     managedProblem = managed.problem,
                     managedNeedsTrust = managed.pendingTrust != null,
                     onReviewTrust = vm::reviewManagedTrust,
+                    onRetry = vm::retryServer,
                 )
                 else -> SettingsScreen(
                     s = s, contentPadding = padding,

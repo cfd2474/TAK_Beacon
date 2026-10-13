@@ -101,6 +101,7 @@ class ManagedConfigManager(private val app: BeaconApp) {
                 callsign = cfg.callsign ?: s.callsign,
                 team = cfg.team ?: s.team,
                 role = cfg.role ?: s.role,
+                pliCotType = cfg.cotType ?: s.pliCotType,
                 startOnBoot = s.startOnBoot || cfg.startBeacon,
             )
         }
@@ -194,6 +195,7 @@ class ManagedConfigManager(private val app: BeaconApp) {
             username = cfg.enrollUsername, secret = cfg.enrollPassword, name = name)
         return when (val r = app.enrollment.enroll(req, app.settings.current().uid, pinned, id)) {
             is EnrollResult.Success -> {
+                app.connections.retry(id)
                 app.servers.upsert(
                     r.server.copy(
                         name = name, managed = true, source = SOURCE, enabled = existing?.enabled ?: true,

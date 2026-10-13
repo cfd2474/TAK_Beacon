@@ -155,7 +155,7 @@ class BeaconService : LifecycleService() {
         // Keep an active emergency alive on the map.
         if (emergency != null && fix != null && now - lastEmergencyElapsed >= EMERGENCY_REPEAT_MS) {
             lastEmergencyElapsed = now
-            send(Cot.emergency(identity(s), fix, emergency))
+            send(Cot.emergency(identity(s), fix, emergency), priority = true)
         }
         BeaconStatus.update {
             it.copy(
@@ -197,7 +197,7 @@ class BeaconService : LifecycleService() {
         val fix = lastFix
         if (s != null && fix != null) {
             lastEmergencyElapsed = SystemClock.elapsedRealtime()
-            send(Cot.emergency(identity(s), fix, type))
+            send(Cot.emergency(identity(s), fix, type), priority = true)
             send(Cot.pli(identity(s), fix, s.staleSeconds, batteryPct()))
         }
         vibrate(longArrayOf(0, 400, 150, 400, 150, 400))
@@ -207,17 +207,22 @@ class BeaconService : LifecycleService() {
         val s = settings
         val fix = lastFix
         if (BeaconStatus.state.value.emergency != null && s != null && fix != null) {
-            send(Cot.emergencyCancel(identity(s), fix))
+            send(Cot.emergencyCancel(identity(s), fix), priority = true)
         }
         BeaconStatus.update { it.copy(emergency = null) }
         vibrate(longArrayOf(0, 120))
     }
 
-    /** To every connected TAK server and, when enabled, the UDP destination. */
-    private fun send(xml: String) {
-        app.connections.broadcast(xml)
+    /**
+     * To every TAK server and, when enabled, the UDP destination. [priority] marks
+     * emergency alerts and cancels: sent first, and over UDP even in
+     * "only when no server is connected" mode.
+     */
+    private fun send(xml: String, priority: Boolean = false) {
+        app.connections.broadcast(xml, priority)
         val s = settings ?: return
-        if (s.udpBroadcast) udp?.send(s.udpHost, s.udpPort, xml)
+        val udpWanted = s.udpBroadcast && (priority || !s.udpOnlyWhenDisconnected || app.connections.connectedCount() == 0)
+        if (udpWanted) udp?.send(s.udpHost, s.udpPort, xml)
     }
 
     private fun toggleUdp(enabled: Boolean) {
@@ -241,6 +246,7 @@ class BeaconService : LifecycleService() {
         callsign = s.callsign,
         team = s.team.cotName,
         role = s.role.cotName,
+        type = s.pliCotType,
         device = "${Build.MANUFACTURER} ${Build.MODEL}".trim(),
         os = Build.VERSION.SDK_INT.toString(),
         version = BuildConfig.VERSION_NAME,

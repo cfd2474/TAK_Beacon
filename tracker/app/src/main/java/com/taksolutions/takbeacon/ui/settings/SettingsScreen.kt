@@ -79,6 +79,7 @@ fun SettingsScreen(
     val mTeam = "team" in managedFields
     val mRole = "role" in managedFields
     val mBoot = "start_on_boot" in managedFields
+    val mCot = "cot_type" in managedFields
     CompositionLocalProvider(LocalSettingsLocked provides s.locked) {
     Column(
         Modifier.verticalScroll(rememberScrollState()).padding(contentPadding).padding(horizontal = 16.dp, vertical = 8.dp),
@@ -164,6 +165,21 @@ fun SettingsScreen(
                         enabled = sec >= s.intervalSeconds * 2)
                 }
             }
+            Spacer(Modifier.height(8.dp))
+            Text("Map symbol", style = MaterialTheme.typography.labelLarge)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                BeaconSettings.COT_TYPE_PRESETS.forEach { (type, label) ->
+                    LockChip(s.pliCotType == type, { onChange { it.copy(pliCotType = type) } }, { Text(label) }, enabled = !mCot)
+                }
+                if (BeaconSettings.COT_TYPE_PRESETS.none { it.first == s.pliCotType }) {
+                    LockChip(true, {}, { Text("Custom") }, enabled = !mCot)
+                }
+            }
+            Text(
+                s.pliCotType + if (mCot) " \u00B7 set by your organization" else "",
+                style = MaterialTheme.typography.bodySmall, fontFamily = Mono,
+                color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp),
+            )
         }
 
         Section("Satellite") {
@@ -193,6 +209,11 @@ fun SettingsScreen(
                 s.udpBroadcast,
             ) { v -> onChange { it.copy(udpBroadcast = v) } }
             if (s.udpBroadcast) {
+                ToggleRow(
+                    "Only when no server is connected",
+                    "Routine reports go over UDP only while no TAK server is connected. Emergencies always do.",
+                    s.udpOnlyWhenDisconnected,
+                ) { v -> onChange { it.copy(udpOnlyWhenDisconnected = v) } }
                 var host by remember(s.udpHost) { mutableStateOf(s.udpHost) }
                 var port by remember(s.udpPort) { mutableStateOf(s.udpPort.toString()) }
                 val validPort = port.toIntOrNull()?.let { it in 1..65535 } == true

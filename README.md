@@ -44,6 +44,13 @@ installs and drives it.
 - **UDP broadcast** (off by default): CoT over UDP to ATAK's SA multicast
   `239.2.3.1:6969` or any host:port, for mesh and serverless use.
 - **PIN lock**: freezes the beacon's on/off, settings and servers (emergencies still work); asks to run without battery restrictions; start on boot also starts it whenever the app opens.
+- **Reliable delivery:** emergency alerts and cancels are queued ahead of
+  position reports and never dropped behind them; while offline only the newest
+  position is kept. A server that keeps rejecting the device's certificate is
+  paused after five attempts (shown with a Retry button) instead of being
+  retried forever, which could get the phone banned by TAK Server's fail2ban.
+- **Map symbol** (CoT type: ground unit, vehicle, aircraft, boat) and UDP
+  broadcast **only when no server is connected**.
 - **MDM managed configuration** ([docs/mdm-managed-config.md](docs/mdm-managed-config.md)):
   an MDM can push a TAK server (self-enrollment or a .p12), callsign, team and
   role, and start the beacon; those items are read-only on the device.

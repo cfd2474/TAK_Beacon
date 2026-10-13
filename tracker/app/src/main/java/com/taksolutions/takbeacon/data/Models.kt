@@ -114,6 +114,10 @@ data class BeaconSettings(
     val locked: Boolean = false,
     /** The first-run permission prompts have been shown (later: banner and Settings button). */
     val permissionsPrompted: Boolean = false,
+    /** CoT type of the position report, i.e. the map symbol (validated by [validCotType]). */
+    val pliCotType: String = DEFAULT_COT_TYPE,
+    /** With UDP broadcast on: send routine reports over UDP only while no server is connected. */
+    val udpOnlyWhenDisconnected: Boolean = false,
 ) {
     val hasPin: Boolean get() = pinHash != null && pinSalt != null
 
@@ -121,6 +125,20 @@ data class BeaconSettings(
         /** ATAK's default situational-awareness multicast group. */
         const val DEFAULT_UDP_HOST = "239.2.3.1"
         const val DEFAULT_UDP_PORT = 6969
+
+        /** Friendly ground unit, as ATAK reports itself. */
+        const val DEFAULT_COT_TYPE = "a-f-G-U-C"
+
+        /** Common map symbols offered in Settings. */
+        val COT_TYPE_PRESETS = listOf(
+            "a-f-G-U-C" to "Ground unit",
+            "a-f-G-E-V-C" to "Vehicle",
+            "a-f-A" to "Aircraft",
+            "a-f-S" to "Boat",
+        )
+
+        /** An atom type such as a-f-G-U-C: letters and digits in dash-separated parts. */
+        fun validCotType(t: String): Boolean = Regex("^a-[a-z](-[A-Za-z0-9]{1,8}){1,8}$").matches(t)
     }
 }
 

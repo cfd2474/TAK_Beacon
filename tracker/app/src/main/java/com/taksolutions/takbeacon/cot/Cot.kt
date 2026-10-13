@@ -30,6 +30,8 @@ data class Identity(
     val device: String,
     val os: String,
     val version: String,
+    /** CoT type of the position report (the map symbol). */
+    val type: String = "a-f-G-U-C",
 )
 
 /**
@@ -61,12 +63,12 @@ object Cot {
         """<point lat="${"%.7f".format(Locale.US, f.lat)}" lon="${"%.7f".format(Locale.US, f.lon)}" hae="${num(f.hae)}" ce="${num(f.ce)}" le="${num(f.le)}"/>"""
 
     private fun header(uid: String, type: String, how: String, now: Long, staleMs: Long) =
-        """<?xml version="1.0" encoding="UTF-8" standalone="yes"?><event version="2.0" uid="${esc(uid)}" type="$type" how="$how" time="${time(now)}" start="${time(now)}" stale="${time(now + staleMs)}">"""
+        """<?xml version="1.0" encoding="UTF-8" standalone="yes"?><event version="2.0" uid="${esc(uid)}" type="${esc(type)}" how="$how" time="${time(now)}" start="${time(now)}" stale="${time(now + staleMs)}">"""
 
     /** Self position report (PLI). */
     fun pli(id: Identity, fix: Fix, staleSeconds: Int, batteryPct: Int?, now: Long = System.currentTimeMillis()): String =
         buildString {
-            append(header(id.uid, "a-f-G-U-C", "m-g", now, staleSeconds * 1000L))
+            append(header(id.uid, id.type, "m-g", now, staleSeconds * 1000L))
             append(point(fix))
             append("<detail>")
             append("""<takv os="${esc(id.os)}" version="${esc(id.version)}" device="${esc(id.device)}" platform="TAK Beacon"/>""")
@@ -87,7 +89,7 @@ object Cot {
             append(header(emergencyUid(id.uid), type.cotType, "h-e", now, 10 * 60_000L))
             append(point(fix))
             append("<detail>")
-            append("""<link uid="${esc(id.uid)}" type="a-f-G-U-C" relation="p-p"/>""")
+            append("""<link uid="${esc(id.uid)}" type="${esc(id.type)}" relation="p-p"/>""")
             append("""<contact callsign="${esc(id.callsign)}-Alert"/>""")
             append("""<emergency type="${esc(type.detailType)}">${esc(id.callsign)}</emergency>""")
             append("</detail></event>")
@@ -99,7 +101,7 @@ object Cot {
             append(header(emergencyUid(id.uid), "b-a-o-can", "h-e", now, 10 * 60_000L))
             append(point(fix))
             append("<detail>")
-            append("""<link uid="${esc(id.uid)}" type="a-f-G-U-C" relation="p-p"/>""")
+            append("""<link uid="${esc(id.uid)}" type="${esc(id.type)}" relation="p-p"/>""")
             append("""<contact callsign="${esc(id.callsign)}-Alert"/>""")
             append("""<emergency cancel="true">${esc(id.callsign)}</emergency>""")
             append("</detail></event>")
