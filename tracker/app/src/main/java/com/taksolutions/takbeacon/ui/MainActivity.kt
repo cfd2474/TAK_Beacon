@@ -9,6 +9,7 @@ import android.provider.Settings
 import android.annotation.SuppressLint
 import android.net.Uri
 import android.os.PowerManager
+import android.os.SystemClock
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -16,15 +17,20 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CellTower
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -76,6 +82,9 @@ class MainActivity : ComponentActivity() {
 
     private val vm: AppViewModel by viewModels()
 
+    /** Runtime permissions not granted yet; refreshed on every resume. */
+    private var missing by mutableStateOf(emptyList<Perm>())
+
     /** Set when the ATAK plugin opened us only to start tracking; we step back to ATAK after. */
     private var startRequestedByPlugin by mutableStateOf(false)
 
@@ -93,6 +102,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        refreshPermissions()
         if (vm.settings.value?.kioskLock == true) runCatching { startLockTask() }
     }
 
@@ -110,6 +120,16 @@ class MainActivity : ComponentActivity() {
             }
             ACTION_REVIEW_ATAK_PROFILE -> Unit // the approval dialog shows whenever a profile is pending
         }
+    }
+
+    private fun refreshPermissions() {
+        missing = Perm.missing(this)
+    }
+
+    /** For a permission Android will no longer prompt for (denied twice): its own settings page. */
+    private fun openAppSettings() {
+        runCatching { startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))) }
+        vm.toast("Open Permissions, then allow Location \"All the time\" and Notifications")
     }
 
     private fun has(permission: String) = ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
@@ -134,6 +154,13 @@ class MainActivity : ComponentActivity() {
         var pinAction by remember { mutableStateOf<PinAction?>(null) }
         var lockAfterSet by remember { mutableStateOf(false) }
         var batteryPrompt by remember { mutableStateOf(false) }
+        // Permission flow: walk every missing permission (first run, banner, Settings),
+        // or only what the beacon needs to start; [fromUser] when the user asked for it.
+        var walkAll by remember { mutableStateOf(false) }
+        var startAfter by remember { mutableStateOf(false) }
+        var fromUser by remember { mutableStateOf(false) }
+        var bootAfter by remember { mutableStateOf(false) }
+        val skipped = remember { mutableSetOf<Perm>() }
         // Once per launch (not per rotation): battery check and start-on-launch.
         var launchChecksDone by rememberSaveable { mutableStateOf(false) }
         val snackbar = remember { SnackbarHostState() }
@@ -141,21 +168,33 @@ class MainActivity : ComponentActivity() {
         LaunchedEffect(toast) { toast?.let { snackbar.showSnackbar(it); vm.toastShown() } }
 
         // --- permissions ---------------------------------------------------------
+        lateinit var advance: () -> Unit
+
+        // When a prompt was launched: a denial that comes back at once means Android showed nothing.
+        val askedAt = remember { longArrayOf(0L) }
+        fun denied(p: Perm, message: String) {
+            refreshPermissions()
+            // Denied instantly with no rationale: Android won't ask again, only its settings page can.
+            val blocked = SystemClock.elapsedRealtime() - askedAt[0] < 600 && !shouldShowRequestPermissionRationale(p.permission)
+            if (fromUser && blocked) openAppSettings() else vm.toast(message)
+            walkAll = false; startAfter = false; fromUser = false; bootAfter = false; skipped.clear()
+        }
         val notifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
-            startTracking()
+            // Not fatal: the beacon runs without its notification permission, just less visibly.
+            if (!it) skipped += Perm.NOTIFICATIONS
+            advance()
         }
         val location = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { r ->
-            if (r[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
-                if (Build.VERSION.SDK_INT >= 33 && !has(Manifest.permission.POST_NOTIFICATIONS)) {
-                    notifications.launch(Manifest.permission.POST_NOTIFICATIONS)
-                } else startTracking()
-            } else {
-                vm.toast("TAK Beacon needs precise location to report your position")
-            }
+            if (r[Manifest.permission.ACCESS_FINE_LOCATION] == true) advance()
+            else denied(Perm.LOCATION, "TAK Beacon needs precise location to report your position")
         }
         val background = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            vm.updateSettings { it.copy(startOnBoot = granted) }
-            if (!granted) vm.toast("Start on boot needs location access \"Allow all the time\"")
+            if (bootAfter) {
+                bootAfter = false
+                vm.updateSettings { it.copy(startOnBoot = granted) }
+            }
+            if (granted) advance()
+            else denied(Perm.BACKGROUND, "Location \"Allow all the time\" keeps the beacon reporting with the screen off and after a restart")
         }
         val camera = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) scanning = true else vm.toast("Camera access is needed to scan QR codes")
@@ -164,12 +203,33 @@ class MainActivity : ComponentActivity() {
             uri?.let(vm::importDataPackage)
         }
 
+        advance = {
+            refreshPermissions()
+            val next = missing.firstOrNull { it !in skipped && (walkAll || it != Perm.BACKGROUND) }
+            when (next) {
+                Perm.LOCATION -> locationDisclosure = true
+                Perm.NOTIFICATIONS -> notifications.launch(Perm.NOTIFICATIONS.permission)
+                Perm.BACKGROUND -> backgroundDisclosure = true
+                null -> {
+                    walkAll = false; fromUser = false; skipped.clear()
+                    if (startAfter) { startAfter = false; startTracking() }
+                }
+            }
+        }
+
+        /** Every missing permission, one prompt after another (first run, banner, Settings). */
+        fun requestPermissions(userAsked: Boolean) {
+            walkAll = true; fromUser = userAsked; skipped.clear()
+            advance()
+        }
+
         fun requestStart() {
-            when {
-                !has(Manifest.permission.ACCESS_FINE_LOCATION) -> locationDisclosure = true
-                Build.VERSION.SDK_INT >= 33 && !has(Manifest.permission.POST_NOTIFICATIONS) ->
-                    notifications.launch(Manifest.permission.POST_NOTIFICATIONS)
-                else -> startTracking()
+            if (has(Manifest.permission.ACCESS_FINE_LOCATION) &&
+                (Build.VERSION.SDK_INT < 33 || has(Manifest.permission.POST_NOTIFICATIONS))) {
+                startTracking()
+            } else {
+                startAfter = true; fromUser = true; skipped.clear()
+                advance()
             }
         }
 
@@ -178,6 +238,11 @@ class MainActivity : ComponentActivity() {
             val s = settings ?: return@LaunchedEffect
             if (launchChecksDone) return@LaunchedEffect
             launchChecksDone = true
+            refreshPermissions()
+            if (!s.permissionsPrompted && missing.isNotEmpty()) {
+                vm.markPermissionsPrompted()
+                requestPermissions(userAsked = false)
+            }
             // "Start on boot" also means: start whenever the app is opened.
             // A locked beacon that was on (e.g. killed by an update) comes back on too.
             val restore = s.startOnBoot || (s.locked && s.wasRunning)
@@ -201,6 +266,7 @@ class MainActivity : ComponentActivity() {
         // --- layout --------------------------------------------------------------------
         Scaffold(
             topBar = {
+                Column {
                 TopAppBar(
                     title = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -220,6 +286,10 @@ class MainActivity : ComponentActivity() {
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 )
+                if (tab == 0 && settings != null && missing.isNotEmpty()) {
+                    PermissionBanner(missing) { requestPermissions(userAsked = true) }
+                }
+                }
             },
             bottomBar = {
                 NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
@@ -239,7 +309,7 @@ class MainActivity : ComponentActivity() {
                     onStop = { BeaconService.stop(this) },
                     onEmergency = { type ->
                         if (has(Manifest.permission.ACCESS_FINE_LOCATION)) BeaconService.emergency(this, type)
-                        else locationDisclosure = true
+                        else requestPermissions(userAsked = true)
                     },
                     onCancelEmergency = { BeaconService.cancelEmergency(this) },
                     onCoordFormat = { f -> vm.updateSettings { it.copy(coordFormat = f) } },
@@ -273,8 +343,7 @@ class MainActivity : ComponentActivity() {
                             !on -> vm.updateSettings { it.copy(startOnBoot = false) }
                             Build.VERSION.SDK_INT < 29 || has(Manifest.permission.ACCESS_BACKGROUND_LOCATION) ->
                                 vm.updateSettings { it.copy(startOnBoot = true) }
-                            !has(Manifest.permission.ACCESS_FINE_LOCATION) -> vm.toast("Start the beacon once first to grant location access")
-                            else -> backgroundDisclosure = true
+                            else -> { bootAfter = true; requestPermissions(userAsked = true) }
                         }
                     },
                     onKiosk = { on ->
@@ -284,6 +353,8 @@ class MainActivity : ComponentActivity() {
                     onBatterySettings = { runCatching { startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) } },
                     onForgetAtak = vm::forgetAtak,
                     onPin = { pinAction = it },
+                    missingPermissions = missing.map { it.label },
+                    onGrantPermissions = { requestPermissions(userAsked = true) },
                 )
             }
         }
@@ -319,7 +390,7 @@ class MainActivity : ComponentActivity() {
         if (locationDisclosure) {
             // Prominent disclosure, shown before the system prompt (Google Play user data policy).
             AlertDialog(
-                onDismissRequest = { locationDisclosure = false },
+                onDismissRequest = { locationDisclosure = false; walkAll = false; startAfter = false; fromUser = false },
                 title = { Text("Share your location") },
                 text = {
                     Text(
@@ -331,29 +402,36 @@ class MainActivity : ComponentActivity() {
                 confirmButton = {
                     TextButton(onClick = {
                         locationDisclosure = false
+                        askedAt[0] = SystemClock.elapsedRealtime()
                         location.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
                     }) { Text("Continue") }
                 },
-                dismissButton = { TextButton(onClick = { locationDisclosure = false }) { Text("Not now") } },
+                dismissButton = { TextButton(onClick = {
+                    locationDisclosure = false; walkAll = false; startAfter = false; fromUser = false
+                }) { Text("Not now") } },
             )
         }
         if (backgroundDisclosure) {
             AlertDialog(
-                onDismissRequest = { backgroundDisclosure = false },
+                onDismissRequest = { backgroundDisclosure = false; walkAll = false; bootAfter = false; fromUser = false },
                 title = { Text("Allow location all the time") },
                 text = {
                     Text(
-                        "To resume reporting after your phone restarts, TAK Beacon needs location access \"Allow all the time\". " +
+                        "TAK Beacon needs location access \"Allow all the time\" to keep reporting while the screen is off, " +
+                            "after your phone restarts, and when ATAK starts it. On the next screen, choose \"Allow all the time\". " +
                             "Your location is still only sent to the TAK servers you added, and only while the beacon is on.",
                     )
                 },
                 confirmButton = {
                     TextButton(onClick = {
                         backgroundDisclosure = false
+                        askedAt[0] = SystemClock.elapsedRealtime()
                         background.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
                     }) { Text("Continue") }
                 },
-                dismissButton = { TextButton(onClick = { backgroundDisclosure = false }) { Text("Cancel") } },
+                dismissButton = { TextButton(onClick = {
+                    backgroundDisclosure = false; walkAll = false; bootAfter = false; fromUser = false
+                }) { Text("Not now") } },
             )
         }
         pending?.let { p -> AtakApprovalDialog(p) }
@@ -379,7 +457,8 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        if (batteryPrompt && !locationDisclosure && !backgroundDisclosure && pending == null && pinAction == null) {
+        if (batteryPrompt && !walkAll && !startAfter && !locationDisclosure && !backgroundDisclosure &&
+            pending == null && pinAction == null) {
             AlertDialog(
                 onDismissRequest = { batteryPrompt = false },
                 title = { Text("Keep TAK Beacon running") },
@@ -397,6 +476,25 @@ class MainActivity : ComponentActivity() {
                 },
                 dismissButton = { TextButton(onClick = { batteryPrompt = false }) { Text("Not now") } },
             )
+        }
+    }
+
+    /** Across the top of the Beacon screen while a permission is missing; tap to ask again. */
+    @Composable
+    private fun PermissionBanner(missing: List<Perm>, onClick: () -> Unit) {
+        Row(
+            Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.errorContainer).clickable(onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(Icons.Outlined.WarningAmber, null, tint = MaterialTheme.colorScheme.onErrorContainer)
+            Spacer(Modifier.width(10.dp))
+            Column(Modifier.weight(1f)) {
+                Text("Missing permissions", style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onErrorContainer)
+                Text(missing.joinToString { it.label } + ". Tap to grant.", style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onErrorContainer)
+            }
         }
     }
 

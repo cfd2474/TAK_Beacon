@@ -23,6 +23,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -68,6 +69,8 @@ fun SettingsScreen(
     onBatterySettings: () -> Unit,
     onForgetAtak: () -> Unit,
     onPin: (PinAction) -> Unit,
+    missingPermissions: List<String> = emptyList(),
+    onGrantPermissions: () -> Unit = {},
 ) {
     CompositionLocalProvider(LocalSettingsLocked provides s.locked) {
     Column(
@@ -75,6 +78,18 @@ fun SettingsScreen(
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         if (s.locked) LockedBanner("Settings are locked.") { onPin(PinAction.UNLOCK) }
+        if (missingPermissions.isNotEmpty()) {
+            // Not a setting: works while locked, so a locked beacon can still be fixed.
+            Section("Permissions") {
+                Text(
+                    "Missing: ${missingPermissions.joinToString()}. TAK Beacon needs these to keep reporting " +
+                        "with the screen off, after a restart and when ATAK starts it.",
+                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error,
+                )
+                Spacer(Modifier.height(8.dp))
+                Button(onClick = onGrantPermissions, modifier = Modifier.fillMaxWidth()) { Text("Grant permissions") }
+            }
+        }
         Section("Identity") {
             var callsign by remember(s.callsign) { mutableStateOf(s.callsign) }
             OutlinedTextField(

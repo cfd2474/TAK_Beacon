@@ -110,6 +110,8 @@ data class BeaconSettings(
     val pinSalt: String? = null,
     /** Settings, servers and the beacon's on/off are frozen until the PIN is entered. */
     val locked: Boolean = false,
+    /** The first-run permission prompts have been shown (later: banner and Settings button). */
+    val permissionsPrompted: Boolean = false,
 ) {
     val hasPin: Boolean get() = pinHash != null && pinSalt != null
 

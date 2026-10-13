@@ -43,6 +43,7 @@ class SettingsRepository(private val context: Context) {
         val PIN_HASH = stringPreferencesKey("lock_pin_hash")
         val PIN_SALT = stringPreferencesKey("lock_pin_salt")
         val LOCKED = booleanPreferencesKey("locked")
+        val PERMS_PROMPTED = booleanPreferencesKey("permissions_prompted")
     }
 
     val settings: Flow<BeaconSettings> = context.settingsStore.data.map(::settingsFrom)
@@ -92,6 +93,7 @@ class SettingsRepository(private val context: Context) {
             }
             // No PIN, no lock: a lock nobody can open would brick the settings.
             p[K.LOCKED] = n.locked && n.pinHash != null
+            p[K.PERMS_PROMPTED] = n.permissionsPrompted
         }
     }
 
@@ -120,6 +122,7 @@ class SettingsRepository(private val context: Context) {
         pinHash = p[K.PIN_HASH],
         pinSalt = p[K.PIN_SALT],
         locked = (p[K.LOCKED] ?: false) && p[K.PIN_HASH] != null,
+        permissionsPrompted = p[K.PERMS_PROMPTED] ?: false,
     )
 
     companion object {

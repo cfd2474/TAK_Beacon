@@ -74,6 +74,13 @@ if [ -z "$want" ] || [ "$signer" != "$want" ]; then
         exit 1
     fi
 fi
+# One version number for both: the app the plugin carries must be the plugin's own version.
+app_ver="$("$aapt" dump badging "$ASSET" | sed -n "s/^package: .*versionName='\([^']*\)'.*/\1/p" | tr -d '\r')"
+plugin_ver="$(sed -n 's/.*ext.PLUGIN_VERSION = "\([^"]*\)".*/\1/p' "$HERE/app/build.gradle" | tr -d '\r')"
+if [ "$app_ver" != "$plugin_ver" ]; then
+    echo "embedded app is $app_ver but PLUGIN_VERSION is $plugin_ver: plugin and app ship one version; refusing" >&2
+    exit 1
+fi
 apk_sha="$(sha256sum "$ASSET" | cut -d' ' -f1)"
 
 # ---- per target -------------------------------------------------------------------

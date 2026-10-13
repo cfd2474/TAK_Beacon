@@ -242,6 +242,11 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         return null
     }
 
+    /** Not a user setting, so the lock doesn't apply. */
+    fun markPermissionsPrompted() = viewModelScope.launch {
+        app.settings.update { it.copy(permissionsPrompted = true) }
+    }
+
     fun lock() = viewModelScope.launch {
         if (app.settings.current().hasPin) app.settings.update { it.copy(locked = true) }
     }

@@ -161,8 +161,17 @@ to someone, for example):
 - The PIN cannot be recovered. A forgotten PIN means clearing TAK Beacon's
   storage (Android Settings → Apps), which removes its servers and certificates.
 
-## 9. Battery and starting automatically
+## 9. Permissions, battery and starting automatically
 
+- The first time TAK Beacon opens, it asks for precise location,
+  notifications, and then location **"Allow all the time"** (Android shows a
+  settings screen for that one: choose *Allow all the time*). These keep the
+  beacon reporting with the screen off, after a restart and when ATAK starts it.
+- If any of them is missing later, a red **Missing permissions** banner
+  appears across the top of the Beacon screen, and **Settings → Permissions**
+  shows a **Grant permissions** button. Tap either to be asked again. If
+  Android no longer shows the prompt (it was refused twice), TAK Beacon opens
+  its Android settings page instead: open *Permissions* and allow them there.
 - When TAK Beacon opens and Android is still restricting its battery use, it
   asks you to allow it to run unrestricted. Allow it: otherwise Android can stop
   reports while the screen is off.
@@ -180,6 +189,8 @@ to someone, for example):
   battery restrictions (it asks when opened; or **Settings → Startup &
   battery**).
 - **Start/Stop does nothing** — TAK Beacon is locked; unlock it with its PIN.
+- **Red "Missing permissions" banner** — tap it and allow what it lists,
+  choosing location "Allow all the time".
 - **"Waiting for GPS"** — TAK Beacon needs a location fix before it reports;
   check that location is on.
 
