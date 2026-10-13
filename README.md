@@ -10,7 +10,7 @@
 
 All releases: https://github.com/cfd2474/TAK_Beacon/releases
 
-The plugin installs the TAK Beacon app for you. User guide: [plugins/TAKBeacon/docs/USER_GUIDE.md](plugins/TAKBeacon/docs/USER_GUIDE.md)
+The plugin installs the TAK Beacon app for you. User guide: [plugins/TAKBeacon/docs/USER_GUIDE.md](plugins/TAKBeacon/docs/USER_GUIDE.md) · **User manual with screenshots (PDF): [docs/TAK_Beacon_User_Manual.pdf](docs/TAK_Beacon_User_Manual.pdf)**
 
 A lightweight position beacon for the TAK ecosystem, plus an ATAK plugin that
 installs and drives it.

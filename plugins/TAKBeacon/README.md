@@ -13,6 +13,9 @@ All releases: https://github.com/cfd2474/TAK_Beacon/releases
 **User guide: [docs/USER_GUIDE.md](docs/USER_GUIDE.md)**
 (https://github.com/cfd2474/TAK_Beacon/blob/main/plugins/TAKBeacon/docs/USER_GUIDE.md)
 
+**User manual with screenshots (PDF):** https://github.com/cfd2474/TAK_Beacon/blob/main/docs/TAK_Beacon_User_Manual.pdf
+(the same manual is in ATAK: Settings, Tool Preferences, Specific Tool Preferences, TAK Beacon, User manual)
+
 _________________________________________________________________
 PURPOSE AND CAPABILITIES
 

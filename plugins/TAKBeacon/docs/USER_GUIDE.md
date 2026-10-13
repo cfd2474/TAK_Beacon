@@ -2,6 +2,8 @@
 
 **Version 1.3.2** · ATAK plugin and the TAK Beacon app
 
+Prefer pictures? The [user manual with screenshots (PDF)](https://github.com/cfd2474/TAK_Beacon/blob/main/docs/TAK_Beacon_User_Manual.pdf) covers the same steps.
+
 **Download TAK Beacon 1.3.2** (pick the one matching your ATAK-CIV version, sideload, then load it in ATAK's Plugins manager):
 
 - **ATAK-CIV 5.6:** https://github.com/cfd2474/TAK_Beacon/releases/download/v1.3.2/ATAK-Plugin-TAKBeacon-1.3.2--5.6.0-civ-release.apk
