@@ -264,8 +264,9 @@ class BeaconService : LifecycleService() {
             RunState.NO_SERVERS -> "No servers configured"
             RunState.STOPPED -> "Stopped"
         }.let { t -> BeaconStatus.state.value.emergency?.let { "EMERGENCY: ${it.label} · $t" } ?: t }
-        if (text == lastNotificationText) return
-        lastNotificationText = text
+        val key = text + app.locked
+        if (key == lastNotificationText) return
+        lastNotificationText = key
         getSystemService(android.app.NotificationManager::class.java).notify(NOTIFICATION_ID, notification(text))
     }
 
@@ -287,7 +288,7 @@ class BeaconService : LifecycleService() {
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
             .setContentIntent(open)
-            .addAction(0, getString(R.string.notif_stop), stop)
+            .apply { if (!app.locked) addAction(0, getString(R.string.notif_stop), stop) }
             .build()
     }
 

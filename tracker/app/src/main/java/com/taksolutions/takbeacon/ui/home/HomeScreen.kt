@@ -17,6 +17,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.outlined.SwapHoriz
@@ -73,6 +75,7 @@ fun HomeScreen(
     onCancelEmergency: () -> Unit,
     onCoordFormat: (CoordFormat) -> Unit,
     onOpenServers: () -> Unit,
+    onLockToggle: () -> Unit,
 ) {
     val running = tracker.runState != RunState.STOPPED
     val status = BeaconTheme.status
@@ -111,19 +114,22 @@ fun HomeScreen(
                 Spacer(Modifier.height(14.dp))
                 IdentityRow(settings)
                 Spacer(Modifier.height(16.dp))
+                val locked = settings.locked
                 if (running) {
-                    OutlinedButton(onClick = onStop, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp)) {
+                    OutlinedButton(onClick = onStop, enabled = !locked, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp)) {
                         Icon(Icons.Filled.Stop, null)
                         Spacer(Modifier.width(8.dp))
                         Text("Stop beacon", style = MaterialTheme.typography.titleMedium)
                     }
                 } else {
-                    Button(onClick = onStart, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp)) {
+                    Button(onClick = onStart, enabled = !locked, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp)) {
                         Icon(Icons.Filled.PlayArrow, null)
                         Spacer(Modifier.width(8.dp))
                         Text("Start beacon", style = MaterialTheme.typography.titleMedium)
                     }
                 }
+                Spacer(Modifier.height(10.dp))
+                LockToggle(locked = locked, hasPin = settings.hasPin, onClick = onLockToggle)
             }
         }
 
@@ -293,5 +299,28 @@ private fun serverLine(s: ServerConfig, link: LinkStatus?, running: Boolean): Pa
         link == null || link.state == LinkState.CONNECTING -> c.waiting to "Connecting…"
         link.state == LinkState.CONNECTED -> c.live to "Connected · ${s.host}:${s.port}"
         else -> MaterialTheme.colorScheme.error to (link.message ?: "Error")
+    }
+}
+
+/** The beacon lock: freezes on/off, settings and servers until the PIN is entered. */
+@Composable
+private fun LockToggle(locked: Boolean, hasPin: Boolean, onClick: () -> Unit) {
+    val c = if (locked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+    Row(
+        Modifier.clip(RoundedCornerShape(50)).clickable(onClick = onClick)
+            .background(if (locked) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(if (locked) Icons.Filled.Lock else Icons.Filled.LockOpen, null, tint = c, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.width(8.dp))
+        Text(
+            when {
+                locked -> "Locked · tap to unlock"
+                hasPin -> "Unlocked · tap to lock"
+                else -> "Lock with a PIN"
+            },
+            color = c, style = MaterialTheme.typography.labelLarge,
+        )
     }
 }

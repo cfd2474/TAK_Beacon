@@ -26,7 +26,8 @@ class BootReceiver : BroadcastReceiver() {
                 val bg = Build.VERSION.SDK_INT < 29 || ContextCompat.checkSelfPermission(
                     context, Manifest.permission.ACCESS_BACKGROUND_LOCATION,
                 ) == PackageManager.PERMISSION_GRANTED
-                if (s.startOnBoot && s.wasRunning && bg) {
+                // "Start on boot" means start: whether or not it ran before the restart.
+                if (s.startOnBoot && bg) {
                     runCatching { BeaconService.start(context) }
                 }
             } finally {
@@ -38,6 +39,7 @@ class BootReceiver : BroadcastReceiver() {
 
 class NotificationActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == BeaconService.ACTION_STOP) BeaconService.stop(context)
+        // A locked beacon cannot be switched off from the notification either.
+        if (intent.action == BeaconService.ACTION_STOP && !BeaconApp.from(context).locked) BeaconService.stop(context)
     }
 }

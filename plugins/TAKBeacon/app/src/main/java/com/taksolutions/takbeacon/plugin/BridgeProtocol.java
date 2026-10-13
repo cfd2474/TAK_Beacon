@@ -46,9 +46,12 @@ final class BridgeProtocol {
     static final String KEY_EMERGENCY = "emergency";
     static final String KEY_TRUSTED = "trusted";
     static final String KEY_SATELLITE = "satellite";
+    static final String KEY_LOCKED = "locked";
     static final String KEY_MESSAGE = "message";
 
     /** RESULT text meaning: start me from a foreground Activity instead. */
     static final String NEEDS_FOREGROUND = "needs_foreground";
     static final String AWAITING_APPROVAL = "awaiting_approval";
+    /** RESULT text: the app is PIN-locked and refused a start, stop or server push. */
+    static final String LOCKED = "locked";
 }

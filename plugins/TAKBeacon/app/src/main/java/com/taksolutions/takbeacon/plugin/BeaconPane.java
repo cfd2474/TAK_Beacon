@@ -120,6 +120,10 @@ final class BeaconPane implements BeaconBridge.Listener {
             say("Starting from the TAK Beacon app…");
             return;
         }
+        if (BridgeProtocol.LOCKED.equals(text)) {
+            say("TAK Beacon is locked. Unlock it in the TAK Beacon app with its PIN first.");
+            return;
+        }
         if (request == BridgeProtocol.MSG_PUSH_PROFILE && BridgeProtocol.AWAITING_APPROVAL.equals(text)) {
             say("Approve the server in TAK Beacon (tap its notification). This is asked once per ATAK install.");
             return;
@@ -158,9 +162,9 @@ final class BeaconPane implements BeaconBridge.Listener {
 
         final String run = s.bound ? s.runState : null;
         final boolean running = run != null && !"STOPPED".equals(run);
-        start.setEnabled(s.bound && !running);
-        stop.setEnabled(s.bound && running);
-        share.setEnabled(s.bound);
+        start.setEnabled(s.bound && !running && !s.locked);
+        stop.setEnabled(s.bound && running && !s.locked);
+        share.setEnabled(s.bound && !s.locked);
 
         if (!installed) {
             setState("Not installed", R.color.state_off);
@@ -178,6 +182,8 @@ final class BeaconPane implements BeaconBridge.Listener {
             else setState("Off", R.color.state_off);
 
             final StringBuilder d = new StringBuilder();
+            if (s.locked)
+                d.append("Locked in the TAK Beacon app: on/off and servers can't be changed until it is unlocked with its PIN.\n");
             if (s.satellite)
                 d.append("Via satellite: reports are slower to save data.\n");
             if ("PAUSED_SATELLITE".equals(run))

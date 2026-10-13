@@ -40,6 +40,9 @@ class BeaconApp : Application() {
         private set
     @Volatile var trustedAtakSigner: String? = null
         private set
+    /** The PIN lock is on: on/off, settings and servers must not change. */
+    @Volatile var locked: Boolean = false
+        private set
 
     override fun onCreate() {
         super.onCreate()
@@ -54,9 +57,11 @@ class BeaconApp : Application() {
         // Identity must exist before anything is sent; this is a tiny one-time write.
         runBlocking {
             settings.ensureIdentity()
-            settings.current().let { uid = it.uid; trustedAtakSigner = it.trustedAtakSigner }
+            settings.current().let { uid = it.uid; trustedAtakSigner = it.trustedAtakSigner; locked = it.locked }
         }
-        appScope.launch { settings.settings.collect { uid = it.uid; trustedAtakSigner = it.trustedAtakSigner } }
+        appScope.launch {
+            settings.settings.collect { uid = it.uid; trustedAtakSigner = it.trustedAtakSigner; locked = it.locked }
+        }
         createChannels()
     }
 

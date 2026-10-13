@@ -97,6 +97,16 @@ TAK Beacon can also send each report as CoT over UDP, so ATAK and other TAK clie
 ]
 
 #tak-slide[
+= Lock with a PIN
+#block()
+On the Beacon screen, tap *Lock with a PIN* and choose a 4–8 digit PIN; TAK Beacon locks as soon as it is set. While locked, the beacon can't be switched on or off (from the app, its notification or this plugin) and settings and servers can't be changed. Emergency alerts still work. Tap *Locked · tap to unlock* and enter the PIN to make changes. Change or remove the PIN in *Settings, Lock*. The PIN cannot be recovered.
+
+== Battery and starting automatically
+#block()
+When opened, TAK Beacon asks to run without battery restrictions if Android is limiting it: allow it, or reports can stop with the screen off. *Start on boot* starts the beacon when the phone starts and whenever the app is opened.
+]
+
+#tak-slide[
 = Troubleshooting
 #block()
 - *Connecting to app* never clears: open the TAK Beacon app once, then reopen this pane.

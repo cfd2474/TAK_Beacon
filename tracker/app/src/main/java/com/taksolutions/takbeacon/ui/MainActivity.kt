@@ -6,6 +6,9 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.annotation.SuppressLint
+import android.net.Uri
+import android.os.PowerManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -49,6 +52,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.taksolutions.takbeacon.BeaconApp
 import com.taksolutions.takbeacon.R
 import com.taksolutions.takbeacon.bridge.BridgeProtocol
 import com.taksolutions.takbeacon.bridge.BridgeService
@@ -56,6 +60,9 @@ import com.taksolutions.takbeacon.bridge.PendingProfile
 import com.taksolutions.takbeacon.enroll.EnrollmentLink
 import com.taksolutions.takbeacon.security.CertStore
 import com.taksolutions.takbeacon.service.BeaconService
+import com.taksolutions.takbeacon.service.RunState
+import com.taksolutions.takbeacon.ui.components.PinDialog
+import com.taksolutions.takbeacon.ui.settings.PinAction
 import com.taksolutions.takbeacon.ui.home.HomeScreen
 import com.taksolutions.takbeacon.ui.servers.EnrollDialogs
 import com.taksolutions.takbeacon.ui.servers.ManualServerDialog
@@ -96,7 +103,8 @@ class MainActivity : ComponentActivity() {
                 else -> intent.dataString?.let { EnrollmentLink.parse(it) }?.let(vm::handleEnrollRequest)
                     ?: vm.toast("That enrollment link isn't valid")
             }
-            BridgeProtocol.ACTION_START_TRACKING -> startRequestedByPlugin = true
+            // A locked beacon's on/off can't be changed from outside either.
+            BridgeProtocol.ACTION_START_TRACKING -> if (!BeaconApp.from(this).locked) startRequestedByPlugin = true
             ACTION_REVIEW_ATAK_PROFILE -> Unit // the approval dialog shows whenever a profile is pending
         }
     }
@@ -120,6 +128,11 @@ class MainActivity : ComponentActivity() {
         var manualError by remember { mutableStateOf<String?>(null) }
         var locationDisclosure by remember { mutableStateOf(false) }
         var backgroundDisclosure by remember { mutableStateOf(false) }
+        var pinAction by remember { mutableStateOf<PinAction?>(null) }
+        var lockAfterSet by remember { mutableStateOf(false) }
+        var batteryPrompt by remember { mutableStateOf(false) }
+        // Once per launch (not per rotation): battery check and start-on-launch.
+        var launchChecksDone by rememberSaveable { mutableStateOf(false) }
         val snackbar = remember { SnackbarHostState() }
 
         LaunchedEffect(toast) { toast?.let { snackbar.showSnackbar(it); vm.toastShown() } }
@@ -158,6 +171,19 @@ class MainActivity : ComponentActivity() {
         }
 
         // The plugin opened us to start tracking.
+        LaunchedEffect(settings != null) {
+            val s = settings ?: return@LaunchedEffect
+            if (launchChecksDone) return@LaunchedEffect
+            launchChecksDone = true
+            // "Start on boot" also means: start whenever the app is opened.
+            if (s.startOnBoot && tracker.runState == RunState.STOPPED && has(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                startTracking()
+            }
+            // Reports stop in Doze when the system restricts the app's battery use.
+            val pm = getSystemService(PowerManager::class.java)
+            if (!pm.isIgnoringBatteryOptimizations(packageName)) batteryPrompt = true
+        }
+
         LaunchedEffect(startRequestedByPlugin) {
             if (startRequestedByPlugin) {
                 startRequestedByPlugin = false
@@ -213,6 +239,13 @@ class MainActivity : ComponentActivity() {
                     onCancelEmergency = { BeaconService.cancelEmergency(this) },
                     onCoordFormat = { f -> vm.updateSettings { it.copy(coordFormat = f) } },
                     onOpenServers = { tab = 1 },
+                    onLockToggle = {
+                        when {
+                            s.locked -> pinAction = PinAction.UNLOCK
+                            s.hasPin -> vm.lock()
+                            else -> { lockAfterSet = true; pinAction = PinAction.SET }
+                        }
+                    },
                 )
                 1 -> ServersScreen(
                     servers = servers, links = links, contentPadding = padding,
@@ -224,6 +257,8 @@ class MainActivity : ComponentActivity() {
                     onToggle = { id, on -> vm.setServerEnabled(id, on) },
                     onEnroll = vm::enrollExisting,
                     onDelete = vm::deleteServer,
+                    locked = s.locked,
+                    onUnlock = { pinAction = PinAction.UNLOCK },
                 )
                 else -> SettingsScreen(
                     s = s, contentPadding = padding,
@@ -243,6 +278,7 @@ class MainActivity : ComponentActivity() {
                     },
                     onBatterySettings = { runCatching { startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) } },
                     onForgetAtak = vm::forgetAtak,
+                    onPin = { pinAction = it },
                 )
             }
         }
@@ -316,6 +352,47 @@ class MainActivity : ComponentActivity() {
             )
         }
         pending?.let { p -> AtakApprovalDialog(p) }
+
+        pinAction?.let { action ->
+            val close = { pinAction = null; lockAfterSet = false }
+            when (action) {
+                PinAction.SET -> PinDialog(
+                    "Set a PIN",
+                    if (lockAfterSet) "Choose a PIN. TAK Beacon locks as soon as it is set."
+                    else "Choose a PIN for locking TAK Beacon. It can't be recovered: keep it safe.",
+                    askCurrent = false, askNew = true, confirmLabel = if (lockAfterSet) "Set and lock" else "Set PIN",
+                    onDismiss = close,
+                ) { _, new ->
+                    vm.setPin(null, new).also { err -> if (err == null && lockAfterSet) vm.lock() }
+                }
+                PinAction.CHANGE -> PinDialog("Change PIN", "Enter the current PIN, then the new one.",
+                    askCurrent = true, askNew = true, confirmLabel = "Change", onDismiss = close) { cur, new -> vm.setPin(cur, new) }
+                PinAction.REMOVE -> PinDialog("Remove PIN", "Without a PIN, TAK Beacon can't be locked.",
+                    askCurrent = true, askNew = false, confirmLabel = "Remove", onDismiss = close) { cur, _ -> vm.removePin(cur) }
+                PinAction.UNLOCK -> PinDialog("Unlock TAK Beacon", "Enter the PIN to change the beacon or its settings.",
+                    askCurrent = true, askNew = false, confirmLabel = "Unlock", onDismiss = close) { cur, _ -> vm.unlock(cur) }
+            }
+        }
+
+        if (batteryPrompt && !locationDisclosure && !backgroundDisclosure && pending == null && pinAction == null) {
+            AlertDialog(
+                onDismissRequest = { batteryPrompt = false },
+                title = { Text("Keep TAK Beacon running") },
+                text = {
+                    Text(
+                        "Android is limiting TAK Beacon's battery use, which can stop position reports while the " +
+                            "screen is off. Allow TAK Beacon to run without battery restrictions?",
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        batteryPrompt = false
+                        requestBatteryExemption()
+                    }) { Text("Allow") }
+                },
+                dismissButton = { TextButton(onClick = { batteryPrompt = false }) { Text("Not now") } },
+            )
+        }
     }
 
     @Composable
@@ -344,6 +421,15 @@ class MainActivity : ComponentActivity() {
             },
             dismissButton = { TextButton(onClick = vm::rejectPendingProfile) { Text("Reject") } },
         )
+    }
+
+    /** Android's own "allow unrestricted battery" prompt; falls back to the settings list. */
+    @SuppressLint("BatteryLife")
+    private fun requestBatteryExemption() {
+        val direct = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:$packageName"))
+        runCatching { startActivity(direct) }.onFailure {
+            runCatching { startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) }
+        }
     }
 
     private fun startTracking() {

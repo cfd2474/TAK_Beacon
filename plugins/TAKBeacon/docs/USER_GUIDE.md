@@ -132,14 +132,42 @@ multicast; enter another address and port to send to a specific host. UDP works
 with no server configured. It is **not encrypted**: anyone on that network can
 read it.
 
+## 8. Lock with a PIN
+
+Use the lock to keep a configured beacon exactly as it is (on a tracker issued
+to someone, for example):
+
+- On the Beacon screen, tap **Lock with a PIN** and choose a 4–8 digit PIN.
+  TAK Beacon locks as soon as it is set. Change or remove the PIN in
+  **Settings → Lock**.
+- While locked, the beacon cannot be switched on or off (from the app, its
+  notification, or the ATAK plugin), and settings and servers cannot be
+  changed. **Emergency alerts still work.**
+- Tap **Locked · tap to unlock** (or **Unlock** on a locked screen) and enter
+  the PIN to make changes; tap the lock again to re-lock. After five wrong PINs
+  TAK Beacon makes you wait, longer after each further miss.
+- The PIN cannot be recovered. A forgotten PIN means clearing TAK Beacon's
+  storage (Android Settings → Apps), which removes its servers and certificates.
+
+## 9. Battery and starting automatically
+
+- When TAK Beacon opens and Android is still restricting its battery use, it
+  asks you to allow it to run unrestricted. Allow it: otherwise Android can stop
+  reports while the screen is off.
+- **Settings → Startup & battery → Start on boot** starts the beacon whenever
+  the phone starts *and* whenever the app is opened. It needs location access
+  "Allow all the time".
+
 ## Troubleshooting
 
 - **"Connecting to app" never clears** — open the TAK Beacon app once, then
   reopen the pane.
 - **"Server rejected this device's certificate"** — send the server from ATAK
   again, or re-enroll it in TAK Beacon.
-- **Reports stop with the screen off** — set TAK Beacon's battery use to
-  **Unrestricted** (TAK Beacon **Settings → Startup & battery**).
+- **Reports stop with the screen off** — allow TAK Beacon to run without
+  battery restrictions (it asks when opened; or **Settings → Startup &
+  battery**).
+- **Start/Stop does nothing** — TAK Beacon is locked; unlock it with its PIN.
 - **"Waiting for GPS"** — TAK Beacon needs a location fix before it reports;
   check that location is on.
 

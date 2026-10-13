@@ -40,6 +40,9 @@ class SettingsRepository(private val context: Context) {
         val UDP = booleanPreferencesKey("udp_broadcast")
         val UDP_HOST = stringPreferencesKey("udp_host")
         val UDP_PORT = intPreferencesKey("udp_port")
+        val PIN_HASH = stringPreferencesKey("lock_pin_hash")
+        val PIN_SALT = stringPreferencesKey("lock_pin_salt")
+        val LOCKED = booleanPreferencesKey("locked")
     }
 
     val settings: Flow<BeaconSettings> = context.settingsStore.data.map(::settingsFrom)
@@ -82,6 +85,13 @@ class SettingsRepository(private val context: Context) {
             p[K.UDP] = n.udpBroadcast
             p[K.UDP_HOST] = n.udpHost.trim().ifEmpty { BeaconSettings.DEFAULT_UDP_HOST }
             p[K.UDP_PORT] = n.udpPort.coerceIn(1, 65535)
+            if (n.pinHash == null || n.pinSalt == null) {
+                p.remove(K.PIN_HASH); p.remove(K.PIN_SALT)
+            } else {
+                p[K.PIN_HASH] = n.pinHash; p[K.PIN_SALT] = n.pinSalt
+            }
+            // No PIN, no lock: a lock nobody can open would brick the settings.
+            p[K.LOCKED] = n.locked && n.pinHash != null
         }
     }
 
@@ -107,6 +117,9 @@ class SettingsRepository(private val context: Context) {
         udpBroadcast = p[K.UDP] ?: false,
         udpHost = p[K.UDP_HOST] ?: BeaconSettings.DEFAULT_UDP_HOST,
         udpPort = p[K.UDP_PORT] ?: BeaconSettings.DEFAULT_UDP_PORT,
+        pinHash = p[K.PIN_HASH],
+        pinSalt = p[K.PIN_SALT],
+        locked = (p[K.LOCKED] ?: false) && p[K.PIN_HASH] != null,
     )
 
     companion object {

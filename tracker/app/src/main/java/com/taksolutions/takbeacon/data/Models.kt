@@ -105,7 +105,14 @@ data class BeaconSettings(
     val udpBroadcast: Boolean = false,
     val udpHost: String = DEFAULT_UDP_HOST,
     val udpPort: Int = DEFAULT_UDP_PORT,
+    /** PBKDF2 hash and salt of the lock PIN; null when no PIN is set. */
+    val pinHash: String? = null,
+    val pinSalt: String? = null,
+    /** Settings, servers and the beacon's on/off are frozen until the PIN is entered. */
+    val locked: Boolean = false,
 ) {
+    val hasPin: Boolean get() = pinHash != null && pinSalt != null
+
     companion object {
         /** ATAK's default situational-awareness multicast group. */
         const val DEFAULT_UDP_HOST = "239.2.3.1"

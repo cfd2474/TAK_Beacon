@@ -52,6 +52,11 @@ class BridgeService : Service() {
             reply(msg, ok = false, "Caller is not ATAK")
             return
         }
+        // While PIN-locked, ATAK cannot switch the beacon on or off or change its servers.
+        if (app.locked && msg.what in setOf(BridgeProtocol.MSG_START, BridgeProtocol.MSG_STOP, BridgeProtocol.MSG_PUSH_PROFILE)) {
+            reply(msg, false, BridgeProtocol.LOCKED)
+            return
+        }
         when (msg.what) {
             BridgeProtocol.MSG_HELLO, BridgeProtocol.MSG_QUERY -> sendState(msg.replyTo, caller)
             BridgeProtocol.MSG_HEARTBEAT -> {
@@ -122,6 +127,7 @@ class BridgeService : Service() {
             st.lastSentMs?.let { putLong(BridgeProtocol.KEY_LAST_SENT_MS, it) }
             st.emergency?.let { putString(BridgeProtocol.KEY_EMERGENCY, it.name) }
             putBoolean(BridgeProtocol.KEY_SATELLITE, st.onSatellite)
+            putBoolean(BridgeProtocol.KEY_LOCKED, app.locked)
             putBoolean(BridgeProtocol.KEY_TRUSTED, trusted != null && trusted.equals(caller.signerSha256, true))
         }
         send(replyTo, Message.obtain(null, BridgeProtocol.MSG_STATE).apply { data = b })

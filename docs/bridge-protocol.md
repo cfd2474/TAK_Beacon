@@ -84,7 +84,9 @@ certificates; otherwise it adds a new server.
 `STATE` (100) — bundle: `protocol`, `appVersionCode` (long), `appVersionName`,
 `runState` (`STOPPED` `WAITING_FOR_FIX` `TRANSMITTING` `PAUSED_FOR_ATAK`
 `PAUSED_SATELLITE` `NO_SERVERS`), `servers`, `connected`, `lastSentMs`,
-`emergency`, `trusted`, `satellite` (boolean; app 1.1+, absent before).
+`emergency`, `trusted`, `satellite` (boolean; app 1.1+, absent before),
+`locked` (boolean; app 1.2+). While locked the app answers START, STOP and
+PUSH_PROFILE with RESULT `ok = 0`, `message = "locked"`.
 A plugin must treat an unknown `runState` as "not transmitting" rather than fail.
 
 `RESULT` (101) — `arg1` = 1 ok / 0 failed, `arg2` = the request's `what`,

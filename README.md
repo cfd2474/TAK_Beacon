@@ -41,6 +41,7 @@ installs and drives it.
   emergencies always sent; can be turned off.
 - **UDP broadcast** (off by default): CoT over UDP to ATAK's SA multicast
   `239.2.3.1:6969` or any host:port, for mesh and serverless use.
+- **PIN lock**: freezes the beacon's on/off, settings and servers (emergencies still work); asks to run without battery restrictions; start on boot also starts it whenever the app opens.
 - No Google Play services dependency: it runs on de-Googled fleet devices.
 
 ```bash

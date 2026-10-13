@@ -41,6 +41,7 @@ final class BeaconBridge {
         String emergency;
         boolean trusted;
         boolean satellite;
+        boolean locked;
     }
 
     interface Listener {
@@ -258,6 +259,7 @@ final class BeaconBridge {
                 state.trusted = b.getBoolean(BridgeProtocol.KEY_TRUSTED);
                 // Absent from apps before 1.1: reads as false.
                 state.satellite = b.getBoolean(BridgeProtocol.KEY_SATELLITE);
+                state.locked = b.getBoolean(BridgeProtocol.KEY_LOCKED);
                 notifyState();
                 break;
             case BridgeProtocol.MSG_RESULT:

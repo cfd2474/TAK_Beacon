@@ -15,6 +15,7 @@ import com.taksolutions.takbeacon.data.Transport
 import com.taksolutions.takbeacon.enroll.EnrollRequest
 import com.taksolutions.takbeacon.enroll.EnrollResult
 import com.taksolutions.takbeacon.enroll.EnrollmentClient
+import com.taksolutions.takbeacon.security.PinLock
 import com.taksolutions.takbeacon.service.BeaconStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,11 +55,29 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     fun toastShown() { _toast.value = null }
     fun toast(msg: String) { _toast.value = msg }
 
-    fun updateSettings(f: (BeaconSettings) -> BeaconSettings) = viewModelScope.launch { app.settings.update(f) }
+    /** True (and tells the user) when the PIN lock forbids a change. */
+    private fun blocked(): Boolean {
+        if (!app.locked) return false
+        _toast.value = "Locked: enter the PIN to make changes"
+        return true
+    }
 
-    fun setServerEnabled(id: String, enabled: Boolean) = viewModelScope.launch { app.servers.setEnabled(id, enabled) }
+    fun updateSettings(f: (BeaconSettings) -> BeaconSettings) {
+        if (blocked()) return
+        viewModelScope.launch { app.settings.update(f) }
+    }
 
-    fun deleteServer(id: String) = viewModelScope.launch {
+    fun setServerEnabled(id: String, enabled: Boolean) {
+        if (blocked()) return
+        viewModelScope.launch { app.servers.setEnabled(id, enabled) }
+    }
+
+    fun deleteServer(id: String) {
+        if (blocked()) return
+        doDeleteServer(id)
+    }
+
+    private fun doDeleteServer(id: String) = viewModelScope.launch {
         withContext(Dispatchers.IO) { app.servers.remove(id) }
         _toast.value = "Server removed"
     }
@@ -67,11 +86,15 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     // --- enrollment -----------------------------------------------------------
 
-    fun showEnrollForm(request: EnrollRequest = EnrollRequest(host = "")) { _enroll.value = EnrollUi.Form(request) }
+    fun showEnrollForm(request: EnrollRequest = EnrollRequest(host = "")) {
+        if (blocked()) return
+        _enroll.value = EnrollUi.Form(request)
+    }
     fun dismissEnroll() { _enroll.value = EnrollUi.Idle }
 
     /** From a QR code or deep link: submit straight away when it carries credentials. */
     fun handleEnrollRequest(req: EnrollRequest) {
+        if (blocked()) return
         if (req.canAutoSubmit) enroll(req) else showEnrollForm(req)
     }
 
@@ -107,7 +130,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     // --- data packages and manual setup ---------------------------------------
 
-    fun importDataPackage(uri: Uri) = viewModelScope.launch {
+    fun importDataPackage(uri: Uri) {
+        if (blocked()) return
+        doImportDataPackage(uri)
+    }
+
+    private fun doImportDataPackage(uri: Uri) = viewModelScope.launch {
         val result = withContext(Dispatchers.IO) {
             runCatching {
                 app.contentResolver().openInputStream(uri)?.use { app.dataPackages.import(it) }
@@ -127,6 +155,15 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun addManualServer(
+        name: String, host: String, port: Int, transport: Transport,
+        clientUri: Uri?, clientPassword: String, trustUri: Uri?, trustPassword: String,
+        onDone: (String?) -> Unit,
+    ) {
+        if (blocked()) { onDone("Locked: enter the PIN to make changes"); return }
+        doAddManualServer(name, host, port, transport, clientUri, clientPassword, trustUri, trustPassword, onDone)
+    }
+
+    private fun doAddManualServer(
         name: String, host: String, port: Int, transport: Transport,
         clientUri: Uri?, clientPassword: String, trustUri: Uri?, trustPassword: String,
         onDone: (String?) -> Unit,
@@ -167,7 +204,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     // --- ATAK profile approval ------------------------------------------------
 
-    fun approvePendingProfile() = viewModelScope.launch {
+    fun approvePendingProfile() {
+        if (blocked()) return
+        doApprovePendingProfile()
+    }
+
+    private fun doApprovePendingProfile() = viewModelScope.launch {
         val p = PendingProfile.pending.value ?: return@launch
         PendingProfile.clear()
         app.settings.update { it.copy(trustedAtakSigner = p.caller.signerSha256) }
@@ -179,4 +221,47 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     fun rejectPendingProfile() = PendingProfile.clear()
 
     fun forgetAtak() = updateSettings { it.copy(trustedAtakSigner = null) }
+
+    // --- PIN lock -------------------------------------------------------------
+
+    /** Sets a PIN, or changes it (then [current] must match). Returns an error, or null. */
+    suspend fun setPin(current: String?, newPin: String): String? {
+        val s = app.settings.current()
+        if (!PinLock.isValidPin(newPin)) return "Use ${PinLock.MIN_LENGTH} to ${PinLock.MAX_LENGTH} digits"
+        if (s.hasPin) checkPin(s, current.orEmpty())?.let { return it }
+        val h = withContext(Dispatchers.Default) { PinLock.hash(newPin) }
+        app.settings.update { it.copy(pinHash = h.hash, pinSalt = h.salt) }
+        return null
+    }
+
+    /** Removes the PIN (and so the lock). Returns an error, or null. */
+    suspend fun removePin(current: String): String? {
+        val s = app.settings.current()
+        checkPin(s, current)?.let { return it }
+        app.settings.update { it.copy(pinHash = null, pinSalt = null, locked = false) }
+        return null
+    }
+
+    fun lock() = viewModelScope.launch {
+        if (app.settings.current().hasPin) app.settings.update { it.copy(locked = true) }
+    }
+
+    /** Unlocks with [pin]. Returns an error, or null. */
+    suspend fun unlock(pin: String): String? {
+        val s = app.settings.current()
+        checkPin(s, pin)?.let { return it }
+        app.settings.update { it.copy(locked = false) }
+        return null
+    }
+
+    private suspend fun checkPin(s: BeaconSettings, pin: String): String? {
+        val wait = PinLock.waitMs()
+        if (wait > 0) return "Too many wrong PINs. Try again in ${(wait + 999) / 1000} s"
+        val ok = withContext(Dispatchers.Default) {
+            s.hasPin && PinLock.matches(pin, PinLock.Hashed(s.pinHash!!, s.pinSalt!!))
+        }
+        if (ok) { PinLock.recordSuccess(); return null }
+        PinLock.recordFailure()
+        return "Wrong PIN"
+    }
 }

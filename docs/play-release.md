@@ -83,6 +83,7 @@ will also refuse to update across the two signatures.
 | Camera | QR code scanning for server enrollment, on-device only. |
 | Data safety: local network | If the user turns on UDP broadcast (off by default), precise location is sent unencrypted to the local network address they choose. User-initiated, for team situational awareness. |
 | Satellite | The manifest declares `PROPERTY_SATELLITE_DATA_OPTIMIZED` (T-Mobile T-Satellite requires target SDK 35+; the app targets 36). |
+| `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` | Core function: continuous position reporting from a foreground service for team safety; Doze stops the reports. The app asks on launch only while it is restricted, explains why, and the user can decline. If Play rejects the declaration, remove the permission: the app then falls back to opening the battery settings list. |
 | Prominent disclosure | Shown before every location request (`MainActivity` → "Share your location"). |
 
 If you'd rather not justify background location, delete the

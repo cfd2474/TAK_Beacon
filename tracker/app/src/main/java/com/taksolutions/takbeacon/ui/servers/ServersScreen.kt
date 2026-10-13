@@ -40,6 +40,7 @@ import com.taksolutions.takbeacon.data.Transport
 import com.taksolutions.takbeacon.net.LinkState
 import com.taksolutions.takbeacon.net.LinkStatus
 import com.taksolutions.takbeacon.ui.components.KeyValueRow
+import com.taksolutions.takbeacon.ui.components.LockedBanner
 import com.taksolutions.takbeacon.ui.components.Section
 import com.taksolutions.takbeacon.ui.components.StatusDot
 import com.taksolutions.takbeacon.ui.theme.BeaconTheme
@@ -57,6 +58,8 @@ fun ServersScreen(
     onToggle: (String, Boolean) -> Unit,
     onEnroll: (ServerConfig) -> Unit,
     onDelete: (String) -> Unit,
+    locked: Boolean = false,
+    onUnlock: () -> Unit = {},
 ) {
     var confirmDelete by remember { mutableStateOf<ServerConfig?>(null) }
     LazyColumn(
@@ -67,16 +70,17 @@ fun ServersScreen(
         ),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
+        if (locked) item { LockedBanner("Servers are locked.", onUnlock) }
         item {
             Section("Add a server") {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    AddTile(Icons.Outlined.QrCodeScanner, "Scan QR", Modifier.weight(1f), onScan)
-                    AddTile(Icons.Outlined.Key, "Sign in", Modifier.weight(1f), onSignIn)
+                    AddTile(Icons.Outlined.QrCodeScanner, "Scan QR", Modifier.weight(1f), onScan, !locked)
+                    AddTile(Icons.Outlined.Key, "Sign in", Modifier.weight(1f), onSignIn, !locked)
                 }
                 Spacer(Modifier.height(10.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    AddTile(Icons.Outlined.FolderZip, "Data package", Modifier.weight(1f), onImport)
-                    AddTile(Icons.Outlined.Tune, "Manual", Modifier.weight(1f), onManual)
+                    AddTile(Icons.Outlined.FolderZip, "Data package", Modifier.weight(1f), onImport, !locked)
+                    AddTile(Icons.Outlined.Tune, "Manual", Modifier.weight(1f), onManual, !locked)
                 }
             }
         }
@@ -90,7 +94,7 @@ fun ServersScreen(
             }
         }
         items(servers, key = { it.id }) { s ->
-            ServerCard(s, links[s.id], certSummary(s.id), onToggle, onEnroll) { confirmDelete = s }
+            ServerCard(s, links[s.id], certSummary(s.id), onToggle, onEnroll, locked) { confirmDelete = s }
         }
     }
 
@@ -106,8 +110,8 @@ fun ServersScreen(
 }
 
 @Composable
-private fun AddTile(icon: ImageVector, label: String, modifier: Modifier, onClick: () -> Unit) {
-    OutlinedButton(onClick = onClick, modifier = modifier.height(64.dp)) {
+private fun AddTile(icon: ImageVector, label: String, modifier: Modifier, onClick: () -> Unit, enabled: Boolean = true) {
+    OutlinedButton(onClick = onClick, enabled = enabled, modifier = modifier.height(64.dp)) {
         Icon(icon, null)
         Spacer(Modifier.width(8.dp))
         Text(label)
@@ -121,6 +125,7 @@ private fun ServerCard(
     cert: String?,
     onToggle: (String, Boolean) -> Unit,
     onEnroll: (ServerConfig) -> Unit,
+    locked: Boolean,
     onDelete: () -> Unit,
 ) {
     val c = BeaconTheme.status
@@ -140,7 +145,7 @@ private fun ServerCard(
                 Text(s.name, style = MaterialTheme.typography.titleMedium)
                 Text(state, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Switch(checked = s.enabled, onCheckedChange = { onToggle(s.id, it) }, enabled = !s.needsEnrollment)
+            Switch(checked = s.enabled, onCheckedChange = { onToggle(s.id, it) }, enabled = !s.needsEnrollment && !locked)
         }
         Spacer(Modifier.height(8.dp))
         KeyValueRow("Address", "${s.host}:${s.port} (${if (s.transport == Transport.SSL) "TLS" else "TCP"})")
@@ -153,13 +158,13 @@ private fun ServerCard(
         KeyValueRow("Added from", s.source)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
             if (s.transport == Transport.SSL) {
-                TextButton(onClick = { onEnroll(s) }) {
+                TextButton(enabled = !locked, onClick = { onEnroll(s) }) {
                     Icon(Icons.Outlined.Edit, null)
                     Spacer(Modifier.width(6.dp))
                     Text(if (s.needsEnrollment) "Sign in" else "Re-enroll")
                 }
             }
-            IconButton(onClick = onDelete) { Icon(Icons.Outlined.Delete, "Remove server") }
+            IconButton(enabled = !locked, onClick = onDelete) { Icon(Icons.Outlined.Delete, "Remove server") }
         }
     }
 }
