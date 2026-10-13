@@ -11,9 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
@@ -37,6 +35,7 @@ import com.taksolutions.takbeacon.enroll.EnrollRequest
 import com.taksolutions.takbeacon.enroll.EnrollmentLink
 import com.taksolutions.takbeacon.security.CertStore
 import com.taksolutions.takbeacon.ui.EnrollUi
+import com.taksolutions.takbeacon.ui.components.ScrollingDialog
 import com.taksolutions.takbeacon.ui.theme.Mono
 
 /** Every dialog of the enrollment flow, driven by [EnrollUi]. */
@@ -98,11 +97,11 @@ private fun EnrollForm(initial: EnrollRequest, error: String?, onSubmit: (Enroll
     val valid = EnrollmentLink.validHost(cleanHost) && port.toIntOrNull()?.let(EnrollmentLink::validPort) == true &&
         csrPort.toIntOrNull()?.let(EnrollmentLink::validPort) == true && user.isNotBlank() && secret.isNotBlank()
 
-    AlertDialog(
+    ScrollingDialog(
         onDismissRequest = onDismiss,
         title = { Text("Sign in to a TAK server") },
         text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (error != null) Text(error, color = MaterialTheme.colorScheme.error)
                 OutlinedTextField(host, { host = it }, label = { Text("Server address") }, singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri), modifier = Modifier.fillMaxWidth())
@@ -151,11 +150,11 @@ fun ManualServerDialog(
     val cleanHost = EnrollmentLink.cleanHost(host)
     val valid = EnrollmentLink.validHost(cleanHost) && port.toIntOrNull()?.let(EnrollmentLink::validPort) == true
 
-    AlertDialog(
+    ScrollingDialog(
         onDismissRequest = onDismiss,
         title = { Text("Add server manually") },
         text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (error != null) Text(error, color = MaterialTheme.colorScheme.error)
                 OutlinedTextField(name, { name = it }, label = { Text("Name") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(host, { host = it }, label = { Text("Server address") }, singleLine = true,

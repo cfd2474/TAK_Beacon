@@ -86,7 +86,9 @@ certificates; otherwise it adds a new server.
 `PAUSED_SATELLITE` `NO_SERVERS`), `servers`, `connected`, `lastSentMs`,
 `emergency`, `trusted`, `satellite` (boolean; app 1.1+, absent before),
 `locked` (boolean; app 1.2+). While locked the app answers START, STOP and
-PUSH_PROFILE with RESULT `ok = 0`, `message = "locked"`.
+PUSH_PROFILE with RESULT `ok = 0`, `message = "locked"`, with one exception
+(app 1.3+): START is accepted while locked when the beacon was on before the
+app was last stopped, so a plugin can restore it after updating the app.
 A plugin must treat an unknown `runState` as "not transmitting" rather than fail.
 
 `RESULT` (101) — `arg1` = 1 ok / 0 failed, `arg2` = the request's `what`,

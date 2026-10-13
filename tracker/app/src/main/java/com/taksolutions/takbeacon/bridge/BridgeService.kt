@@ -53,7 +53,14 @@ class BridgeService : Service() {
             return
         }
         // While PIN-locked, ATAK cannot switch the beacon on or off or change its servers.
-        if (app.locked && msg.what in setOf(BridgeProtocol.MSG_START, BridgeProtocol.MSG_STOP, BridgeProtocol.MSG_PUSH_PROFILE)) {
+        // (START is allowed only to restore a beacon that was on when it was locked,
+        // e.g. after an app update killed it: that is not a change.)
+        val lockedOut = when (msg.what) {
+            BridgeProtocol.MSG_STOP, BridgeProtocol.MSG_PUSH_PROFILE -> true
+            BridgeProtocol.MSG_START -> !app.wasRunning
+            else -> false
+        }
+        if (app.locked && lockedOut) {
             reply(msg, false, BridgeProtocol.LOCKED)
             return
         }

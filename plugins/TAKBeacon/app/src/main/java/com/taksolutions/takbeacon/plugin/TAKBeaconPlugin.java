@@ -36,6 +36,7 @@ public class TAKBeaconPlugin implements IPlugin {
     private ForegroundWatcher foreground;
     private BeaconBridge bridge;
     private AppInstaller installer;
+    private AppUpdateWatcher updates;
     private BeaconPane paneView;
     private Pane pane;
 
@@ -76,6 +77,14 @@ public class TAKBeaconPlugin implements IPlugin {
         bridge = new BeaconBridge(host.getApplicationContext(), foreground);
         bridge.start();
         installer = new AppInstaller(pluginContext, host);
+        updates = new AppUpdateWatcher(host, installer, new AppUpdateWatcher.Listener() {
+            @Override
+            public void onAppChanged() {
+                if (paneView != null)
+                    paneView.refresh();
+            }
+        });
+        updates.start();
         uiService.addToolbarItem(toolbarItem);
         registerPreferences();
     }
@@ -90,6 +99,8 @@ public class TAKBeaconPlugin implements IPlugin {
         }
         if (paneView != null)
             paneView.dispose();
+        if (updates != null)
+            updates.stop();
         if (installer != null)
             installer.dispose();
         if (bridge != null)

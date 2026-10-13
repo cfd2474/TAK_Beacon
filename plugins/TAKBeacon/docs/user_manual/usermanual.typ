@@ -40,6 +40,8 @@ Open the plugin from ATAK's toolbar menu: *TAK Beacon*.
 + Android shows its install screen. Tap *Install*.
 
 The pane then reads _Installed, connected_. If it says the installed app is a _different build_, it was installed from another source; tap *Uninstall other build*, then install again.
+
+*Updates.* Each plugin release carries the matching TAK Beacon app. The plugin checks the installed app shortly after ATAK starts and whenever the app is installed, updated or removed. If it is older, ATAK shows the notification _TAK Beacon update available_; open the pane, tap *Update TAK Beacon* and confirm Android's update screen. Servers, settings and the PIN are kept, and a beacon that was on comes back on by itself, even while TAK Beacon is locked.
 ]
 
 #tak-slide[

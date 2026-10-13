@@ -104,7 +104,10 @@ class MainActivity : ComponentActivity() {
                     ?: vm.toast("That enrollment link isn't valid")
             }
             // A locked beacon's on/off can't be changed from outside either.
-            BridgeProtocol.ACTION_START_TRACKING -> if (!BeaconApp.from(this).locked) startRequestedByPlugin = true
+            BridgeProtocol.ACTION_START_TRACKING -> BeaconApp.from(this).let { app ->
+                // Locked: only to restore a beacon that was on (e.g. after an update).
+                if (!app.locked || app.wasRunning) startRequestedByPlugin = true
+            }
             ACTION_REVIEW_ATAK_PROFILE -> Unit // the approval dialog shows whenever a profile is pending
         }
     }
@@ -176,7 +179,9 @@ class MainActivity : ComponentActivity() {
             if (launchChecksDone) return@LaunchedEffect
             launchChecksDone = true
             // "Start on boot" also means: start whenever the app is opened.
-            if (s.startOnBoot && tracker.runState == RunState.STOPPED && has(Manifest.permission.ACCESS_FINE_LOCATION)) {
+            // A locked beacon that was on (e.g. killed by an update) comes back on too.
+            val restore = s.startOnBoot || (s.locked && s.wasRunning)
+            if (restore && tracker.runState == RunState.STOPPED && has(Manifest.permission.ACCESS_FINE_LOCATION)) {
                 startTracking()
             }
             // Reports stop in Doze when the system restricts the app's battery use.

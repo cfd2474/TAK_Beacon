@@ -23,7 +23,10 @@ PURPOSE AND CAPABILITIES
   With the plugin, an operator can:
 
   - install or update the TAK Beacon app from inside ATAK (the plugin carries
-    the Play-signed app; Android shows its normal install confirmation)
+    the Play-signed app; Android shows its normal install confirmation). The
+    plugin checks the installed version against the one it carries, posts an
+    ATAK notification when the app is out of date, and turns the beacon back
+    on after the update if it was on
   - send one of ATAK's server connections, with its certificates and the
     operator's callsign, team and role, to TAK Beacon, so both apps report as
     one marker

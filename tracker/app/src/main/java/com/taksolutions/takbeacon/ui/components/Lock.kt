@@ -74,7 +74,7 @@ fun PinDialog(
     val ready = (!askCurrent || current.length >= PinLock.MIN_LENGTH) &&
         (!askNew || (PinLock.isValidPin(new) && new == again))
 
-    AlertDialog(
+    ScrollingDialog(
         onDismissRequest = { if (!busy) onDismiss() },
         icon = { Icon(Icons.Filled.Lock, null) },
         title = { Text(title) },

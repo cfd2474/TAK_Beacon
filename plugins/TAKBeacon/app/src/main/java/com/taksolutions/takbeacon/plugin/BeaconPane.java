@@ -42,6 +42,7 @@ final class BeaconPane implements BeaconBridge.Listener {
     private final Button start;
     private final Button stop;
     private final Button share;
+    private boolean restoreAfterUpdate;
 
     BeaconPane(Context pluginContext, MapView mapView, BeaconBridge bridge, AppInstaller installer) {
         this.pluginContext = pluginContext;
@@ -97,6 +98,12 @@ final class BeaconPane implements BeaconBridge.Listener {
         return root;
     }
 
+    /** Re-reads the app's install state (after it is installed, updated or removed). */
+    void refresh() {
+        bridge.refresh();
+        render();
+    }
+
     void onShown() {
         bridge.refresh();
         render();
@@ -108,6 +115,14 @@ final class BeaconPane implements BeaconBridge.Listener {
 
     @Override
     public void onStateChanged(BeaconBridge.State state) {
+        // After an update the app was killed: bring the beacon back if it was on.
+        if (restoreAfterUpdate && state.bound && state.runState != null) {
+            restoreAfterUpdate = false;
+            if ("STOPPED".equals(state.runState)) {
+                say("Restarting the beacon after the update\u2026");
+                bridge.startTracking();
+            }
+        }
         render();
     }
 
@@ -213,13 +228,17 @@ final class BeaconPane implements BeaconBridge.Listener {
             installer.uninstall();
             return;
         }
+        final BeaconBridge.State before = bridge.state();
+        final boolean wasRunning = before.bound && before.runState != null && !"STOPPED".equals(before.runState);
         say("Opening Android's installer…");
         installer.install(new AppInstaller.Callback() {
             @Override
             public void onInstallFinished(boolean ok, String text) {
                 say(text);
-                if (ok)
+                if (ok) {
+                    restoreAfterUpdate = wasRunning;
                     bridge.refresh();
+                }
                 render();
             }
         });

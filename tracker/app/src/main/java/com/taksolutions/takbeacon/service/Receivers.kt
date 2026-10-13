@@ -26,10 +26,14 @@ class BootReceiver : BroadcastReceiver() {
                 val bg = Build.VERSION.SDK_INT < 29 || ContextCompat.checkSelfPermission(
                     context, Manifest.permission.ACCESS_BACKGROUND_LOCATION,
                 ) == PackageManager.PERMISSION_GRANTED
+                val updated = intent.action == Intent.ACTION_MY_PACKAGE_REPLACED
                 // "Start on boot" means start: whether or not it ran before the restart.
-                if (s.startOnBoot && bg) {
-                    runCatching { BeaconService.start(context) }
-                }
+                // After an update (which kills the app), resume if it was running.
+                val fg = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
+                    PackageManager.PERMISSION_GRANTED
+                val start = (s.startOnBoot && bg) || (updated && s.wasRunning && fg)
+                // If Android refuses a background start, the ATAK plugin reopens the app to start it.
+                if (start) runCatching { BeaconService.start(context) }
             } finally {
                 pending.finish()
             }
