@@ -6,6 +6,8 @@ ATAK Plugin — TAK Beacon
 - **ATAK-CIV 5.7:** https://github.com/cfd2474/TAK_Beacon/releases/download/v1.2.0/ATAK-Plugin-TAKBeacon-1.2.0--5.7.0-civ-release.apk
 - **ATAK-CIV 5.8:** https://github.com/cfd2474/TAK_Beacon/releases/download/v1.2.0/ATAK-Plugin-TAKBeacon-1.2.0--5.8.0-civ-release.apk
 
+**Standalone app, no ATAK:** `TAKBeacon-app-1.3.0.apk` on the [v1.2.0 release page](https://github.com/cfd2474/TAK_Beacon/releases/tag/v1.2.0) (the same Play-signed app the plugin installs; Android 8+)
+
 All releases: https://github.com/cfd2474/TAK_Beacon/releases
 
 **User guide: [docs/USER_GUIDE.md](docs/USER_GUIDE.md)**
