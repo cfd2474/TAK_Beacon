@@ -16,7 +16,7 @@ object BridgeProtocol {
     // Plugin → app (Message.what)
     const val MSG_HELLO = 1
     const val MSG_QUERY = 2
-    /** arg1 = 1 while ATAK is in the foreground, 0 when it leaves. Send every 5 s while foreground. */
+    /** arg1 = 1 while ATAK is running (every 5 s), 0 when it shuts down. */
     const val MSG_HEARTBEAT = 3
     const val MSG_START = 4
     const val MSG_STOP = 5

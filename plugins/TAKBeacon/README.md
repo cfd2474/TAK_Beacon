@@ -34,7 +34,7 @@ PURPOSE AND CAPABILITIES
     one marker
   - start and stop the beacon, and see whether it is transmitting, waiting for
     GPS, or paused, and how many servers it is connected to
-  - have the beacon pause automatically while ATAK is in the foreground
+  - have the beacon pause automatically while ATAK is running
     (ATAK is then the one reporting), and resume when ATAK leaves
 
   The app itself provides PLI to several servers, certificate enrollment,

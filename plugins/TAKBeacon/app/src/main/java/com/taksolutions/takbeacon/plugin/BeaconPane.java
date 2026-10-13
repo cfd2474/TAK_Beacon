@@ -222,7 +222,7 @@ final class BeaconPane implements BeaconBridge.Listener {
         } else {
             if (s.emergency != null) setState("EMERGENCY ACTIVE", R.color.state_alert);
             else if ("TRANSMITTING".equals(run)) setState("Transmitting", R.color.state_live);
-            else if ("PAUSED_FOR_ATAK".equals(run)) setState("Paused while ATAK is open", R.color.state_paused);
+            else if ("PAUSED_FOR_ATAK".equals(run)) setState("Paused while ATAK is running", R.color.state_paused);
             else if ("PAUSED_SATELLITE".equals(run)) setState("Paused on satellite", R.color.state_paused);
             else if ("WAITING_FOR_FIX".equals(run)) setState("Waiting for GPS", R.color.state_waiting);
             else if ("NO_SERVERS".equals(run)) setState("No servers", R.color.state_waiting);

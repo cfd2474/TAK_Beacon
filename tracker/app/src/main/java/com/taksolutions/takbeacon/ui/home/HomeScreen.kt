@@ -274,7 +274,7 @@ private fun subline(t: TrackerState, s: BeaconSettings, servers: List<ServerConf
         RunState.STOPPED -> if (servers.isEmpty()) "Add a server, then start the beacon" else "Not sharing your position"
         RunState.NO_SERVERS -> "Enable or add a server to start reporting"
         RunState.WAITING_FOR_FIX -> "Waiting for a location fix · $connected/$enabled connected"
-        RunState.PAUSED_FOR_ATAK -> "ATAK is open and reporting your position"
+        RunState.PAUSED_FOR_ATAK -> "ATAK is running and reporting your position"
         RunState.PAUSED_SATELLITE -> "On a satellite network, and satellite data is off in Settings"
         RunState.TRANSMITTING -> {
             val ago = t.lastSentMs?.let { "last report ${((now - it) / 1000).coerceAtLeast(0)}s ago" } ?: "first report pending"

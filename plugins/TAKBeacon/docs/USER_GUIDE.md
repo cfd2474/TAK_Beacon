@@ -83,14 +83,15 @@ you to sign in to get its own.
 - While reporting, Android shows a **TAK Beacon** notification. **Stop beacon**
   in the pane, or **Stop** in the notification, turns it off.
 - The pane shows the state (*Transmitting*, *Waiting for GPS*, *Paused while
-  ATAK is open*), how many servers are connected, and when the last report was
+  ATAK is running*), how many servers are connected, and when the last report was
   sent.
 
-### Pause while ATAK is open
+### Pause while ATAK is running
 
-In TAK Beacon, **Settings → ATAK → Pause while ATAK is open** stops TAK
-Beacon's reports while ATAK is in front, so you are not on the map twice.
-Reporting resumes about 15 seconds after ATAK leaves the screen. An active
+In TAK Beacon, **Settings → ATAK → Pause while ATAK is running** stops TAK
+Beacon's reports for as long as ATAK is running (in front or in the
+background), so you are not on the map twice.
+Reporting resumes as soon as ATAK is closed or stops. An active
 emergency is never paused.
 
 ## 4. Emergencies

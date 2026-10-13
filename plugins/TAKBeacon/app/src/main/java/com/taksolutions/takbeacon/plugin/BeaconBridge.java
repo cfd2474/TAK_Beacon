@@ -18,7 +18,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Client side of the TAK Beacon bridge: binds the app's Messenger service,
- * keeps a copy of its state, and sends ATAK's foreground heartbeat.
+ * keeps a copy of its state, and sends the heartbeat that tells it ATAK is running.
  *
  * <p>Lives for the plugin's lifetime (not inside a Tool or the pane), so the
  * heartbeat keeps running while the pane is closed. Everything runs on the
@@ -51,7 +51,6 @@ final class BeaconBridge {
     }
 
     private final Context appContext;
-    private final ForegroundWatcher foreground;
     private final Handler main = new Handler(Looper.getMainLooper());
     private final CopyOnWriteArrayList<Listener> listeners = new CopyOnWriteArrayList<>();
     private final State state = new State();
@@ -59,7 +58,6 @@ final class BeaconBridge {
     private Messenger service;
     private boolean binding;
     private boolean running;
-    private boolean lastSentForeground;
 
     private final Messenger replies = new Messenger(new Handler(Looper.getMainLooper()) {
         @Override
@@ -75,7 +73,7 @@ final class BeaconBridge {
             binding = false;
             state.bound = true;
             send(BridgeProtocol.MSG_HELLO, 0, null);
-            sendHeartbeat(true);
+            sendHeartbeat();
             notifyState();
         }
 
@@ -105,21 +103,14 @@ final class BeaconBridge {
         public void run() {
             if (!running)
                 return;
-            sendHeartbeat(false);
+            sendHeartbeat();
             send(BridgeProtocol.MSG_QUERY, 0, null);
             main.postDelayed(this, TICK_MS);
         }
     };
 
-    BeaconBridge(Context appContext, ForegroundWatcher foreground) {
+    BeaconBridge(Context appContext) {
         this.appContext = appContext;
-        this.foreground = foreground;
-        foreground.setListener(new ForegroundWatcher.Listener() {
-            @Override
-            public void onForegroundChanged(boolean inForeground) {
-                sendHeartbeat(true);
-            }
-        });
     }
 
     void start() {
@@ -131,7 +122,7 @@ final class BeaconBridge {
     void stop() {
         running = false;
         main.removeCallbacks(tick);
-        // Tell the app ATAK is gone so it resumes reporting immediately.
+        // ATAK is shutting down (or the plugin unloading): the app resumes reporting now.
         send(BridgeProtocol.MSG_HEARTBEAT, 0, null);
         unbind();
     }
@@ -220,13 +211,12 @@ final class BeaconBridge {
         }
     };
 
-    /** Sends the heartbeat every tick while in front, and once on leaving. */
-    private void sendHeartbeat(boolean changed) {
-        final boolean fg = foreground.isForeground();
-        if (fg || changed || lastSentForeground) {
-            send(BridgeProtocol.MSG_HEARTBEAT, fg ? 1 : 0, null);
-            lastSentForeground = fg;
-        }
+    /**
+     * "ATAK is running", every tick whether ATAK is in front or not: TAK Beacon pauses
+     * for as long as ATAK runs, not only while it is on screen.
+     */
+    private void sendHeartbeat() {
+        send(BridgeProtocol.MSG_HEARTBEAT, 1, null);
     }
 
     private void send(int what, int arg1, Bundle data) {

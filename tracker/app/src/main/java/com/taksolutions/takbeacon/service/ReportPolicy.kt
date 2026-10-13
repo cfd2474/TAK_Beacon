@@ -16,14 +16,14 @@ object ReportPolicy {
         s: BeaconSettings,
         servers: Int,
         hasFix: Boolean,
-        atakInFront: Boolean,
+        atakRunning: Boolean,
         onSatellite: Boolean,
         emergency: Boolean,
     ): RunState = when {
         servers == 0 && !s.udpBroadcast -> RunState.NO_SERVERS
         // An emergency goes out on whatever network there is.
         onSatellite && !s.satelliteData && !emergency -> RunState.PAUSED_SATELLITE
-        !emergency && s.atakAutoPause && atakInFront -> RunState.PAUSED_FOR_ATAK
+        !emergency && s.atakAutoPause && atakRunning -> RunState.PAUSED_FOR_ATAK
         !hasFix -> RunState.WAITING_FOR_FIX
         else -> RunState.TRANSMITTING
     }

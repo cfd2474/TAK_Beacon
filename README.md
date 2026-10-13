@@ -35,7 +35,7 @@ installs and drives it.
   Cancel is supported.
 - **ATAK integration** ([docs/bridge-protocol.md](docs/bridge-protocol.md)): the
   plugin can push ATAK's server, certificates and identity, start and stop
-  tracking, and pause the beacon while ATAK is in front.
+  tracking, and pause the beacon while ATAK is running.
 - Team colour and role, DD/DMS/MGRS, an OpenStreetMap preview with a dark mode,
   kiosk lock, and start on boot.
 - **Satellite-ready** (T-Mobile T-Satellite / Android constrained satellite

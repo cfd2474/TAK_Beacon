@@ -27,14 +27,13 @@ object BeaconStatus {
     private val _state = MutableStateFlow(TrackerState())
     val state: StateFlow<TrackerState> = _state.asStateFlow()
 
-    /** Last time the ATAK plugin reported ATAK in the foreground (elapsed-realtime ms). */
-    @Volatile var atakForegroundAtMs: Long = 0L
+    /**
+     * ATAK is running with the TAK Beacon plugin loaded: set by the plugin's heartbeat,
+     * cleared when it signs off or its process dies (the bridge loses its binding).
+     * No timeout: a sleeping phone delays ATAK's heartbeats without ATAK having gone.
+     */
+    @Volatile var atakRunning: Boolean = false
 
     fun update(f: (TrackerState) -> TrackerState) = _state.update(f)
 
-    fun atakInForeground(nowElapsed: Long): Boolean =
-        atakForegroundAtMs != 0L && nowElapsed - atakForegroundAtMs < ATAK_HEARTBEAT_TIMEOUT_MS
-
-    /** The plugin sends a heartbeat every few seconds; three missed ones resume tracking. */
-    const val ATAK_HEARTBEAT_TIMEOUT_MS = 15_000L
 }

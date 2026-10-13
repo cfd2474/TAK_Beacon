@@ -42,10 +42,14 @@ signer apply straight away. The user can revoke this in Settings → ATAK.
 | 7 | EMERGENCY | `emergency` = `ALERT_911` \| `RING_THE_BELL` \| `IN_CONTACT` \| `GEO_FENCE` | RESULT |
 | 8 | CANCEL_EMERGENCY | — | RESULT |
 
-**Heartbeat.** While ATAK is in the foreground, send `HEARTBEAT arg1=1` every 5
-seconds. Send `arg1=0` when ATAK goes to the background. If the user has turned on
-"Pause while ATAK is open", the app pauses PLI while heartbeats are fresh, and
-resumes 15 seconds after the last one. An active emergency is never paused.
+**Heartbeat.** While ATAK is running (in front or not), send `HEARTBEAT arg1=1`
+every 5 seconds, and `arg1=0` when ATAK shuts down or the plugin unloads. If the
+user has turned on "Pause while ATAK is running", the app (1.3.2+) pauses PLI from
+the first `arg1=1` until an `arg1=0` or until the bridge loses its binding (ATAK's
+process died). There is no timeout: a sleeping phone delays heartbeats without
+ATAK having gone. An active emergency is never paused. Plugins before 1.3.2 sent
+`arg1=1` only while ATAK was in front and `arg1=0` on leaving, which still means
+"pause only while in front".
 
 **Starting from the background.** Android 12+ blocks most foreground-service
 starts from the background. When START returns `needs_foreground`, start an

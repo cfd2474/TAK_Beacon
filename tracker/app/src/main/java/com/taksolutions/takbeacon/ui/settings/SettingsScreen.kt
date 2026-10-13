@@ -231,7 +231,7 @@ fun SettingsScreen(
 
         Section("ATAK") {
             ToggleRow(
-                "Pause while ATAK is open",
+                "Pause while ATAK is running",
                 "Requires the TAK Beacon ATAK plugin. Avoids two markers for one person.",
                 s.atakAutoPause,
             ) { v -> onChange { it.copy(atakAutoPause = v) } }

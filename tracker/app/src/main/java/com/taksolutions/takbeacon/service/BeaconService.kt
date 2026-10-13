@@ -139,7 +139,7 @@ class BeaconService : LifecycleService() {
         val serverCount = app.servers.servers.value.count { it.enabled && !it.needsEnrollment }
         val onSatellite = state.onSatellite
         val runState = ReportPolicy.runState(
-            s, serverCount, hasFix = fix != null, atakInFront = BeaconStatus.atakInForeground(now),
+            s, serverCount, hasFix = fix != null, atakRunning = BeaconStatus.atakRunning,
             onSatellite = onSatellite, emergency = emergency != null,
         )
         val interval = ReportPolicy.intervalSeconds(s, onSatellite)

@@ -1,6 +1,5 @@
 package com.taksolutions.takbeacon.plugin;
 
-import android.app.Activity;
 import android.content.Context;
 
 import com.atak.plugins.impl.PluginContextProvider;
@@ -20,9 +19,9 @@ import gov.tak.platform.marshal.MarshalManager;
 /**
  * Entry point named in assets/plugin.xml.
  *
- * <p>The bridge and the foreground watcher live for the plugin's lifetime, not
- * inside the pane: the heartbeat that pauses TAK Beacon while ATAK is in front
- * must keep running with the pane closed.
+ * <p>The bridge lives for the plugin's lifetime, not inside the pane: the
+ * heartbeat that pauses TAK Beacon while ATAK is running must keep going with
+ * the pane closed.
  */
 public class TAKBeaconPlugin implements IPlugin {
 
@@ -33,7 +32,6 @@ public class TAKBeaconPlugin implements IPlugin {
     private final IHostUIService uiService;
     private final ToolbarItem toolbarItem;
 
-    private ForegroundWatcher foreground;
     private BeaconBridge bridge;
     private AppInstaller installer;
     private AppUpdateWatcher updates;
@@ -72,9 +70,7 @@ public class TAKBeaconPlugin implements IPlugin {
             return;
         }
         final Context host = mapView.getContext();
-        foreground = new ForegroundWatcher(((Activity) host).getApplication());
-        foreground.start();
-        bridge = new BeaconBridge(host.getApplicationContext(), foreground);
+        bridge = new BeaconBridge(host.getApplicationContext());
         bridge.start();
         installer = new AppInstaller(pluginContext, host);
         updates = new AppUpdateWatcher(host, installer, new AppUpdateWatcher.Listener() {
@@ -105,8 +101,6 @@ public class TAKBeaconPlugin implements IPlugin {
             installer.dispose();
         if (bridge != null)
             bridge.stop();
-        if (foreground != null)
-            foreground.stop();
         paneView = null;
         pane = null;
     }

@@ -13,7 +13,6 @@ import android.os.Looper
 import android.os.Message
 import android.os.Messenger
 import android.os.RemoteException
-import android.os.SystemClock
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.taksolutions.takbeacon.BeaconApp
@@ -45,6 +44,12 @@ class BridgeService : Service() {
     override fun onBind(intent: Intent?): IBinder? =
         if (intent?.action == BridgeProtocol.ACTION_BIND) messenger.binder else null
 
+    /** The plugin unbound, or ATAK's process died: ATAK is no longer running. */
+    override fun onUnbind(intent: Intent?): Boolean {
+        BeaconStatus.atakRunning = false
+        return false
+    }
+
     private fun handle(msg: Message) {
         val caller = callerOf(msg.sendingUid)
         if (caller == null) {
@@ -67,7 +72,8 @@ class BridgeService : Service() {
         when (msg.what) {
             BridgeProtocol.MSG_HELLO, BridgeProtocol.MSG_QUERY -> sendState(msg.replyTo, caller)
             BridgeProtocol.MSG_HEARTBEAT -> {
-                BeaconStatus.atakForegroundAtMs = if (msg.arg1 == 1) SystemClock.elapsedRealtime() else 0L
+                // 1: ATAK is running (sent every few seconds); 0: ATAK is shutting down.
+                BeaconStatus.atakRunning = msg.arg1 == 1
             }
             BridgeProtocol.MSG_START -> {
                 // Android 12+ refuses most background FGS starts; on "needs_foreground"
