@@ -207,6 +207,6 @@ destination (default 239.2.3.1:6969). It does not listen for incoming connection
 plugin itself makes no network connections.
 
 The same manual is inside the plugin: **Settings → Tool Preferences → Specific
-Tool Preferences → TAK Beacon → User manual**.
+Tool Preferences → TAK Beacon → Plugin documentation**.
 
 Problems or questions: https://github.com/cfd2474/TAK_Beacon/issues

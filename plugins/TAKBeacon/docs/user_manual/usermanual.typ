@@ -253,7 +253,7 @@ If Android no longer shows the prompt (it was refused twice), TAK Beacon opens i
 #toolbox.side-by-side(columns: (7fr, 5fr))[
 TAK Beacon sends your position only to the servers you add, on their streaming port (8089 TLS or 8087 TCP by default) and, during sign-in only, their enrollment port (8446), plus the UDP destination if you turn UDP broadcast on. It does not listen for incoming connections. The plugin itself makes no network connections.
 
-This manual is in ATAK under *Settings, Tool Preferences, Specific Tool Preferences, TAK Beacon, User manual*.
+This manual is in ATAK under *Settings, Tool Preferences, Specific Tool Preferences, TAK Beacon, Plugin documentation*.
 ][
 #atak("screens/tool_prefs_manual.jpg")
 ]

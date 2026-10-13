@@ -16,7 +16,7 @@
     <string name="share_server_hint">Gives TAK Beacon the connection ATAK uses, with its certificates, so the beacon reports to the same server under your callsign.</string>
     <string name="pause_hint">While ATAK is running, TAK Beacon can pause so you are not on the map twice. Turn it on in TAK Beacon: Settings, ATAK.</string>
 
-    <string name="prefs_summary">TAK Beacon user manual</string>
-    <string name="manual_title">User manual</string>
-    <string name="manual_summary">How to install, connect and use TAK Beacon</string>
+    <string name="prefs_summary">Plugin documentation</string>
+    <string name="manual_title">Plugin documentation</string>
+    <string name="manual_summary">TAK Beacon user manual (PDF, with screenshots)</string>
 </resources>
