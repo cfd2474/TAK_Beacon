@@ -11,7 +11,7 @@
 
 #show: userguide.with(
    plugin-name: "TAK Beacon",
-   plugin-version: "1.3.3",
+   plugin-version: "1.3.4",
    platform: "ATAK",
    platform-version: "5.6 \u{2013} 5.8",
 )
