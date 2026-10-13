@@ -1,3 +1,5 @@
+// Keep this file pure ASCII (write other characters as \u{...}): the tak.gov
+// build rewrites it in place with the JVM default charset, which may not be UTF-8.
 
 #import "@preview/polylux:0.4.0": *
 #import "formatting.typ": *
@@ -6,7 +8,7 @@
    plugin-name: "TAK Beacon",
    plugin-version: "1.0.0",
    platform: "ATAK",
-   platform-version: "5.6 – 5.8",
+   platform-version: "5.6 \u{2013} 5.8",
 )
 
 #set text(size: 17pt)
@@ -99,7 +101,7 @@ TAK Beacon can also send each report as CoT over UDP, so ATAK and other TAK clie
 #tak-slide[
 = Lock with a PIN
 #block()
-On the Beacon screen, tap *Lock with a PIN* and choose a 4–8 digit PIN; TAK Beacon locks as soon as it is set. While locked, the beacon can't be switched on or off (from the app, its notification or this plugin) and settings and servers can't be changed. Emergency alerts still work. Tap *Locked · tap to unlock* and enter the PIN to make changes. Change or remove the PIN in *Settings, Lock*. The PIN cannot be recovered.
+On the Beacon screen, tap *Lock with a PIN* and choose a 4\u{2013}8 digit PIN; TAK Beacon locks as soon as it is set. While locked, the beacon can't be switched on or off (from the app, its notification or this plugin) and settings and servers can't be changed. Emergency alerts still work. Tap *Locked \u{00B7} tap to unlock* and enter the PIN to make changes. Change or remove the PIN in *Settings, Lock*. The PIN cannot be recovered.
 
 == Battery and starting automatically
 #block()

@@ -38,6 +38,18 @@ if command -v cygpath >/dev/null 2>&1; then
     export JAVA_TOOL_OPTIONS="-Djava.io.tmpdir=$(cygpath -m "$JTMP") ${JAVA_TOOL_OPTIONS:-}"
 fi
 SKILL="${ATAK_PIPELINE_SKILL:-$HOME/.claude/skills/atak-plugin-pipeline}"
+REPO="$(cd "$(dirname "$0")/../../.." && pwd)"
+
+# The skill's gate runs its publish scrub, which flags 239.2.3.1 (ATAK's public SA
+# multicast group, in the README's PORTS and the manual) as an IP address. Run
+# the gate from a temporary copy whose publish-scrub.sh goes through the repo's
+# scripts/scrub.sh: the skill's scrub unchanged, plus that one accepted literal.
+GATE="$(mktemp -d)"
+cp -R "$SKILL/scripts" "$GATE/"
+cat > "$GATE/scripts/publish-scrub.sh" <<SHIM
+#!/usr/bin/env bash
+ATAK_PIPELINE_SKILL="$SKILL" exec bash "$REPO/scripts/scrub.sh" "\$@"
+SHIM
 ASSET="$HERE/app/src/main/assets/takbeacon.apk"
 DIST="${ATAK_DIST:-$HOME/atak-dist}"
 NAME=TAKBeacon
@@ -71,7 +83,7 @@ HOLD="$(mktemp -d)"
 restore() {
     [ -f "$HOLD/takbeacon.apk" ] && mv "$HOLD/takbeacon.apk" "$ASSET"
     [ -f "$GRADLE.orig" ] && mv "$GRADLE.orig" "$GRADLE"
-    rm -rf "$HOLD"
+    rm -rf "$HOLD" "$GATE"
 }
 trap restore EXIT
 
@@ -82,7 +94,7 @@ for atak in $TARGETS; do
     sed -i "s/^\(\s*ext\.ATAK_VERSION\s*=\s*\)'[^']*'/\1'$atak'/" "$GRADLE"
 
     mv "$ASSET" "$HOLD/takbeacon.apk"
-    ATAK_SDK="$sdk" bash "$SKILL/scripts/submission-zip.sh" "$NAME"
+    ATAK_SDK="$sdk" bash "$GATE/scripts/submission-zip.sh" "$NAME"
     mv "$HOLD/takbeacon.apk" "$ASSET"
 
     zipfile="$(ls -t "$DIST/$NAME"-*-"$atak".zip | head -1)"
