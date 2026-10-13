@@ -21,6 +21,8 @@ class BootReceiver : BroadcastReceiver() {
         val app = BeaconApp.from(context)
         app.appScope.launch {
             try {
+                // An MDM config can turn the beacon on at boot; apply it first.
+                runCatching { app.managed.apply() }
                 val s = app.settings.current()
                 // From the background, a location service only works with "Allow all the time".
                 val bg = Build.VERSION.SDK_INT < 29 || ContextCompat.checkSelfPermission(

@@ -8,6 +8,7 @@ import com.taksolutions.takbeacon.data.ServerRepository
 import com.taksolutions.takbeacon.data.SettingsRepository
 import com.taksolutions.takbeacon.enroll.DataPackageImporter
 import com.taksolutions.takbeacon.enroll.EnrollmentClient
+import com.taksolutions.takbeacon.mdm.ManagedConfigManager
 import com.taksolutions.takbeacon.net.ConnectionManager
 import com.taksolutions.takbeacon.security.CertStore
 import com.taksolutions.takbeacon.service.BeaconStatus
@@ -31,6 +32,8 @@ class BeaconApp : Application() {
     lateinit var enrollment: EnrollmentClient
         private set
     lateinit var dataPackages: DataPackageImporter
+        private set
+    lateinit var managed: ManagedConfigManager
         private set
 
     val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -66,6 +69,9 @@ class BeaconApp : Application() {
             settings.settings.collect { uid = it.uid; trustedAtakSigner = it.trustedAtakSigner; locked = it.locked; wasRunning = it.wasRunning }
         }
         createChannels()
+        managed = ManagedConfigManager(this)
+        managed.register()
+        appScope.launch { managed.apply() }
     }
 
     private fun createChannels() {

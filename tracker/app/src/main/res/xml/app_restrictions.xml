@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Managed configuration an MDM can push (Android app restrictions). Every key is
+  optional. An empty configuration means "not managed". Read by
+  mdm/ManagedConfigManager; keys are in mdm/ManagedConfig. Flat keys only: some
+  MDMs don't support bundles or bundle arrays. Secrets have "password" in the
+  key so MDM consoles mask them. Text values may use the MDM's per-device
+  variables; a value the MDM can't fill for a device is left out.
+-->
+<restrictions xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <restriction
+        android:key="managed_config_version"
+        android:restrictionType="string"
+        android:title="@string/mdm_version_title"
+        android:description="@string/mdm_version_desc" />
+
+    <restriction
+        android:key="server_name"
+        android:restrictionType="string"
+        android:title="@string/mdm_server_name_title"
+        android:description="@string/mdm_server_name_desc" />
+
+    <restriction
+        android:key="server_host"
+        android:restrictionType="string"
+        android:title="@string/mdm_server_host_title"
+        android:description="@string/mdm_server_host_desc" />
+
+    <restriction
+        android:key="server_port"
+        android:restrictionType="integer"
+        android:defaultValue="8089"
+        android:title="@string/mdm_server_port_title"
+        android:description="@string/mdm_server_port_desc" />
+
+    <restriction
+        android:key="server_protocol"
+        android:restrictionType="choice"
+        android:defaultValue="ssl"
+        android:entries="@array/mdm_protocol_entries"
+        android:entryValues="@array/mdm_protocol_values"
+        android:title="@string/mdm_server_protocol_title"
+        android:description="@string/mdm_server_protocol_desc" />
+
+    <restriction
+        android:key="enroll_port"
+        android:restrictionType="integer"
+        android:defaultValue="8446"
+        android:title="@string/mdm_enroll_port_title"
+        android:description="@string/mdm_enroll_port_desc" />
+
+    <restriction
+        android:key="enroll_username"
+        android:restrictionType="string"
+        android:title="@string/mdm_enroll_username_title"
+        android:description="@string/mdm_enroll_username_desc" />
+
+    <restriction
+        android:key="enroll_password"
+        android:restrictionType="string"
+        android:title="@string/mdm_enroll_password_title"
+        android:description="@string/mdm_enroll_password_desc" />
+
+    <restriction
+        android:key="server_cert_sha256"
+        android:restrictionType="string"
+        android:title="@string/mdm_server_cert_title"
+        android:description="@string/mdm_server_cert_desc" />
+
+    <restriction
+        android:key="client_p12_base64"
+        android:restrictionType="string"
+        android:title="@string/mdm_client_p12_title"
+        android:description="@string/mdm_client_p12_desc" />
+
+    <restriction
+        android:key="client_p12_password"
+        android:restrictionType="string"
+        android:title="@string/mdm_client_p12_password_title"
+        android:description="@string/mdm_client_p12_password_desc" />
+
+    <restriction
+        android:key="trust_p12_base64"
+        android:restrictionType="string"
+        android:title="@string/mdm_trust_p12_title"
+        android:description="@string/mdm_trust_p12_desc" />
+
+    <restriction
+        android:key="trust_p12_password"
+        android:restrictionType="string"
+        android:title="@string/mdm_trust_p12_password_title"
+        android:description="@string/mdm_trust_p12_password_desc" />
+
+    <restriction
+        android:key="callsign"
+        android:restrictionType="string"
+        android:title="@string/mdm_callsign_title"
+        android:description="@string/mdm_callsign_desc" />
+
+    <restriction
+        android:key="team"
+        android:restrictionType="choice"
+        android:entries="@array/mdm_team_entries"
+        android:entryValues="@array/mdm_team_entries"
+        android:title="@string/mdm_team_title"
+        android:description="@string/mdm_team_desc" />
+
+    <restriction
+        android:key="role"
+        android:restrictionType="choice"
+        android:entries="@array/mdm_role_entries"
+        android:entryValues="@array/mdm_role_entries"
+        android:title="@string/mdm_role_title"
+        android:description="@string/mdm_role_desc" />
+
+    <restriction
+        android:key="start_beacon"
+        android:restrictionType="bool"
+        android:defaultValue="false"
+        android:title="@string/mdm_start_beacon_title"
+        android:description="@string/mdm_start_beacon_desc" />
+
+</restrictions>

@@ -144,6 +144,7 @@ class MainActivity : ComponentActivity() {
         val enroll by vm.enroll.collectAsStateWithLifecycle()
         val toast by vm.toast.collectAsStateWithLifecycle()
         val pending by vm.pendingProfile.collectAsStateWithLifecycle()
+        val managed by BeaconApp.from(this).managed.state.collectAsStateWithLifecycle()
 
         var tab by rememberSaveable { mutableStateOf(0) }
         var scanning by remember { mutableStateOf(false) }
@@ -334,6 +335,9 @@ class MainActivity : ComponentActivity() {
                     onDelete = vm::deleteServer,
                     locked = s.locked,
                     onUnlock = { pinAction = PinAction.UNLOCK },
+                    managedProblem = managed.problem,
+                    managedNeedsTrust = managed.pendingTrust != null,
+                    onReviewTrust = vm::reviewManagedTrust,
                 )
                 else -> SettingsScreen(
                     s = s, contentPadding = padding,
@@ -355,6 +359,8 @@ class MainActivity : ComponentActivity() {
                     onPin = { pinAction = it },
                     missingPermissions = missing.map { it.label },
                     onGrantPermissions = { requestPermissions(userAsked = true) },
+                    managedFields = managed.fields,
+                    managedByOrg = managed.managed,
                 )
             }
         }

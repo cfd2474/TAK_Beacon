@@ -60,6 +60,9 @@ fun ServersScreen(
     onDelete: (String) -> Unit,
     locked: Boolean = false,
     onUnlock: () -> Unit = {},
+    managedProblem: String? = null,
+    managedNeedsTrust: Boolean = false,
+    onReviewTrust: (ServerConfig) -> Unit = {},
 ) {
     var confirmDelete by remember { mutableStateOf<ServerConfig?>(null) }
     LazyColumn(
@@ -94,7 +97,12 @@ fun ServersScreen(
             }
         }
         items(servers, key = { it.id }) { s ->
-            ServerCard(s, links[s.id], certSummary(s.id), onToggle, onEnroll, locked) { confirmDelete = s }
+            ServerCard(
+                s, links[s.id], certSummary(s.id), onToggle, onEnroll, locked,
+                problem = if (s.managed) managedProblem else null,
+                needsTrust = s.managed && managedNeedsTrust,
+                onReviewTrust = { onReviewTrust(s) },
+            ) { confirmDelete = s }
         }
     }
 
@@ -126,6 +134,9 @@ private fun ServerCard(
     onToggle: (String, Boolean) -> Unit,
     onEnroll: (ServerConfig) -> Unit,
     locked: Boolean,
+    problem: String? = null,
+    needsTrust: Boolean = false,
+    onReviewTrust: () -> Unit = {},
     onDelete: () -> Unit,
 ) {
     val c = BeaconTheme.status
@@ -145,7 +156,8 @@ private fun ServerCard(
                 Text(s.name, style = MaterialTheme.typography.titleMedium)
                 Text(state, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Switch(checked = s.enabled, onCheckedChange = { onToggle(s.id, it) }, enabled = !s.needsEnrollment && !locked)
+            // The MDM's server is always on and can't be removed here.
+            if (!s.managed) Switch(checked = s.enabled, onCheckedChange = { onToggle(s.id, it) }, enabled = !s.needsEnrollment && !locked)
         }
         Spacer(Modifier.height(8.dp))
         KeyValueRow("Address", "${s.host}:${s.port} (${if (s.transport == Transport.SSL) "TLS" else "TCP"})")
@@ -156,15 +168,25 @@ private fun ServerCard(
             else -> "System CAs"
         })
         KeyValueRow("Added from", s.source)
+        if (s.managed) {
+            Text("Managed by your organization", style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp))
+        }
+        if (problem != null) {
+            Text(problem, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(top = 6.dp))
+        }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            if (s.transport == Transport.SSL) {
+            if (needsTrust) {
+                TextButton(onClick = onReviewTrust) { Text("Review certificate") }
+            } else if (s.transport == Transport.SSL && (!s.managed || s.needsEnrollment)) {
                 TextButton(enabled = !locked, onClick = { onEnroll(s) }) {
                     Icon(Icons.Outlined.Edit, null)
                     Spacer(Modifier.width(6.dp))
                     Text(if (s.needsEnrollment) "Sign in" else "Re-enroll")
                 }
             }
-            IconButton(enabled = !locked, onClick = onDelete) { Icon(Icons.Outlined.Delete, "Remove server") }
+            if (!s.managed) IconButton(enabled = !locked, onClick = onDelete) { Icon(Icons.Outlined.Delete, "Remove server") }
         }
     }
 }

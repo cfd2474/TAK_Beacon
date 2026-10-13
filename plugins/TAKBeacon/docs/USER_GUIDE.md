@@ -122,6 +122,13 @@ In TAK Beacon, open **Servers**:
 If a server presents a certificate the device does not recognise, TAK Beacon
 shows its fingerprint and asks you to confirm it once.
 
+**Managed by your organization.** If your organization manages the phone, it can
+set up TAK Beacon's server, callsign, team and role for you. That server is
+marked *Managed by your organization* and can't be changed or removed on the
+phone, and the settings it provides show *Set by your organization*. If its
+certificate needs confirming, tap **Review certificate** on the server.
+Administrators: see [MDM managed configuration](https://github.com/cfd2474/TAK_Beacon/blob/main/docs/mdm-managed-config.md).
+
 ## 6. Satellite (T-Mobile T-Satellite)
 
 TAK Beacon is satellite-ready (Android's constrained satellite networks; it is

@@ -77,6 +77,9 @@ class ProfileApplier(private val app: BeaconApp) {
 
     suspend fun apply(p: AtakProfile): Result<ServerConfig> = runCatching {
         val existing = app.servers.findByEndpoint(p.host, p.port)
+        // The MDM's server is read-only, and so are the identity fields it sets.
+        if (existing?.managed == true) return@runCatching existing
+        val mdm = app.managed.state.value.fields
         val id = existing?.id ?: EnrollmentClient.newServerId()
         if (p.trustP12 != null) app.certs.saveTrustP12(id, p.trustP12, p.trustPassword.orEmpty())
         if (p.clientP12 != null) app.certs.saveClientP12(id, p.clientP12, p.clientPassword.orEmpty())
@@ -92,10 +95,10 @@ class ProfileApplier(private val app: BeaconApp) {
         app.servers.upsert(server)
         app.settings.update { s ->
             s.copy(
-                callsign = p.callsign ?: s.callsign,
+                callsign = p.callsign?.takeUnless { "callsign" in mdm } ?: s.callsign,
                 uid = p.uid ?: s.uid,
-                team = Team.fromCot(p.team) ?: s.team,
-                role = Role.fromCot(p.role) ?: s.role,
+                team = Team.fromCot(p.team)?.takeUnless { "team" in mdm } ?: s.team,
+                role = Role.fromCot(p.role)?.takeUnless { "role" in mdm } ?: s.role,
             )
         }
         server

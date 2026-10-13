@@ -76,6 +76,8 @@ data class ServerConfig(
     val csrPort: Int = 8446,
     /** Origin of the profile, shown in the server list. */
     val source: String = "manual",
+    /** Provided by the MDM's managed configuration: read-only on the device. */
+    val managed: Boolean = false,
 )
 
 data class BeaconSettings(

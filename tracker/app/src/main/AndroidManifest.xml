@@ -52,6 +52,11 @@
             android:name="android.telephony.PROPERTY_SATELLITE_DATA_OPTIMIZED"
             android:value="${applicationId}" />
 
+        <!-- Managed configuration an MDM can push: a TAK server and identity (mdm/). -->
+        <meta-data
+            android:name="android.content.APP_RESTRICTIONS"
+            android:resource="@xml/app_restrictions" />
+
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"

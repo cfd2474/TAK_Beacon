@@ -71,7 +71,14 @@ fun SettingsScreen(
     onPin: (PinAction) -> Unit,
     missingPermissions: List<String> = emptyList(),
     onGrantPermissions: () -> Unit = {},
+    /** Settings the MDM sets (ManagedConfig.FIELD_*): shown read-only. */
+    managedFields: Set<String> = emptySet(),
+    managedByOrg: Boolean = false,
 ) {
+    val mCallsign = "callsign" in managedFields
+    val mTeam = "team" in managedFields
+    val mRole = "role" in managedFields
+    val mBoot = "start_on_boot" in managedFields
     CompositionLocalProvider(LocalSettingsLocked provides s.locked) {
     Column(
         Modifier.verticalScroll(rememberScrollState()).padding(contentPadding).padding(horizontal = 16.dp, vertical = 8.dp),
@@ -90,6 +97,13 @@ fun SettingsScreen(
                 Button(onClick = onGrantPermissions, modifier = Modifier.fillMaxWidth()) { Text("Grant permissions") }
             }
         }
+        if (managedByOrg) {
+            Text(
+                "Managed by your organization. Settings it provides can't be changed here.",
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 4.dp),
+            )
+        }
         Section("Identity") {
             var callsign by remember(s.callsign) { mutableStateOf(s.callsign) }
             OutlinedTextField(
@@ -97,7 +111,8 @@ fun SettingsScreen(
                 { callsign = it.take(40) },
                 label = { Text("Callsign") },
                 singleLine = true,
-                enabled = !s.locked,
+                enabled = !s.locked && !mCallsign,
+                supportingText = if (mCallsign) ({ Text("Set by your organization") }) else null,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 trailingIcon = {
                     if (callsign != s.callsign && callsign.isNotBlank()) {
@@ -115,20 +130,22 @@ fun SettingsScreen(
                     Box(
                         Modifier.size(36.dp).clip(CircleShape).background(Color(t.argb))
                             .border(if (selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outline), CircleShape)
-                            .clickable(enabled = !s.locked) { onChange { it.copy(team = t) } },
+                            .clickable(enabled = !s.locked && !mTeam) { onChange { it.copy(team = t) } },
                         contentAlignment = Alignment.Center,
                     ) {
                         if (selected) Icon(Icons.Filled.Check, t.cotName, tint = if (t.argb == 0xFFFFFFFF || t == Team.YELLOW) Color.Black else Color.White)
                     }
                 }
             }
-            Text(s.team.cotName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp))
+            Text(s.team.cotName + if (mTeam) " \u00B7 set by your organization" else "", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp))
             Spacer(Modifier.height(14.dp))
             Text("Role", style = MaterialTheme.typography.labelLarge)
             Spacer(Modifier.height(4.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Role.entries.forEach { r -> LockChip(r == s.role, { onChange { it.copy(role = r) } }, { Text(r.cotName) }) }
+                Role.entries.forEach { r -> LockChip(r == s.role, { onChange { it.copy(role = r) } }, { Text(r.cotName) }, enabled = !mRole) }
             }
+            if (mRole) Text("Set by your organization", style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
         }
 
         Section("Reporting") {
@@ -246,8 +263,10 @@ fun SettingsScreen(
         Section("Startup & battery") {
             ToggleRow(
                 "Start on boot",
-                "Resume reporting after a restart, if the beacon was on. Needs location access \"all the time\".",
+                if (mBoot) "Set by your organization: the beacon starts when the phone starts and when the app opens."
+                else "Resume reporting after a restart, if the beacon was on. Needs location access \"all the time\".",
                 s.startOnBoot,
+                enabled = !mBoot,
                 onToggle = onStartOnBoot,
             )
             Spacer(Modifier.height(8.dp))

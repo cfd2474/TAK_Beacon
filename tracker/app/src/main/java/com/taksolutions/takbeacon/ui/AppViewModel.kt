@@ -67,13 +67,20 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch { app.settings.update(f) }
     }
 
+    /** True (and tells the user) when the MDM provides this server. */
+    private fun managedServer(id: String): Boolean {
+        if (!app.managed.isManagedServer(id)) return false
+        _toast.value = "This server is managed by your organization"
+        return true
+    }
+
     fun setServerEnabled(id: String, enabled: Boolean) {
-        if (blocked()) return
+        if (blocked() || managedServer(id)) return
         viewModelScope.launch { app.servers.setEnabled(id, enabled) }
     }
 
     fun deleteServer(id: String) {
-        if (blocked()) return
+        if (blocked() || managedServer(id)) return
         doDeleteServer(id)
     }
 
@@ -99,6 +106,20 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun enroll(req: EnrollRequest, pinnedSha256: String? = null) {
+        val mdm = app.managed.state.value
+        // Trusting the certificate of the MDM's server: the MDM's own credentials enroll it.
+        if (pinnedSha256 != null && mdm.pendingTrust?.sha256 == pinnedSha256 &&
+            app.servers.findByEndpoint(req.host, req.port)?.managed == true
+        ) {
+            _enroll.value = EnrollUi.Working("Requesting a certificate from ${req.host}…")
+            viewModelScope.launch {
+                app.managed.apply(pinnedSha256)
+                val st = app.managed.state.value
+                _enroll.value = EnrollUi.Idle
+                _toast.value = st.problem ?: "Server set up"
+            }
+            return
+        }
         _enroll.value = EnrollUi.Working("Requesting a certificate from ${req.host}…")
         viewModelScope.launch {
             val s = app.settings.current()
@@ -106,7 +127,10 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             val existing = app.servers.findByEndpoint(req.host, req.port)
             when (val r = app.enrollment.enroll(req, s.uid, pinnedSha256, existing?.id)) {
                 is EnrollResult.Success -> {
-                    val server = existing?.let { r.server.copy(enabled = it.enabled, name = req.name ?: it.name) } ?: r.server
+                    val server = existing?.let {
+                        r.server.copy(enabled = it.enabled, name = req.name ?: it.name, managed = it.managed,
+                            source = if (it.managed) it.source else r.server.source)
+                    } ?: r.server
                     app.servers.upsert(server)
                     app.settings.update { cur ->
                         cur.copy(
@@ -121,6 +145,15 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 is EnrollResult.Failure -> _enroll.value = EnrollUi.Form(req, r.message)
             }
         }
+    }
+
+    /** Shows the certificate of the MDM's server for the user to confirm (see [enroll]). */
+    fun reviewManagedTrust(server: ServerConfig) {
+        val t = app.managed.state.value.pendingTrust ?: return
+        _enroll.value = EnrollUi.NeedsTrust(
+            EnrollRequest(host = server.host, port = server.port, csrPort = server.csrPort, name = server.name),
+            t.sha256, t.subject, t.issuer,
+        )
     }
 
     /** Enrolls a server that came from a data package without a client certificate. */

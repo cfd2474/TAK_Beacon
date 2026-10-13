@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Titles and descriptions MDM consoles show for xml/app_restrictions. -->
+<resources>
+    <string name="mdm_version_title">Configuration version</string>
+    <string name="mdm_version_desc">Any text. Change it to make devices apply this configuration again (and enroll again).</string>
+    <string name="mdm_server_name_title">Server name</string>
+    <string name="mdm_server_name_desc">Name shown in TAK Beacon. Defaults to the server address.</string>
+    <string name="mdm_server_host_title">Server address</string>
+    <string name="mdm_server_host_desc">TAK server host name or IP address. Leave empty to manage identity only.</string>
+    <string name="mdm_server_port_title">Streaming port</string>
+    <string name="mdm_server_port_desc">CoT streaming port: 8089 for TLS, 8087 for TCP.</string>
+    <string name="mdm_server_protocol_title">Protocol</string>
+    <string name="mdm_server_protocol_desc">TLS (recommended) or plain TCP.</string>
+    <string name="mdm_enroll_port_title">Enrollment port</string>
+    <string name="mdm_enroll_port_desc">Certificate enrollment port, usually 8446.</string>
+    <string name="mdm_enroll_username_title">Enrollment username</string>
+    <string name="mdm_enroll_username_desc">TAK server username. With the password, the device requests its own client certificate.</string>
+    <string name="mdm_enroll_password_title">Enrollment password</string>
+    <string name="mdm_enroll_password_desc">TAK server password or token for the username above.</string>
+    <string name="mdm_server_cert_title">Server certificate SHA-256</string>
+    <string name="mdm_server_cert_desc">Only for a self-signed server certificate: its SHA-256 fingerprint, so devices trust it without asking.</string>
+    <string name="mdm_client_p12_title">Client certificate (base64 .p12)</string>
+    <string name="mdm_client_p12_desc">Instead of enrollment: the client certificate as a base64-encoded .p12.</string>
+    <string name="mdm_client_p12_password_title">Client certificate password</string>
+    <string name="mdm_client_p12_password_desc">Password of the client .p12.</string>
+    <string name="mdm_trust_p12_title">Trust store (base64 .p12)</string>
+    <string name="mdm_trust_p12_desc">Optional: the server CA as a base64-encoded .p12 trust store.</string>
+    <string name="mdm_trust_p12_password_title">Trust store password</string>
+    <string name="mdm_trust_p12_password_desc">Password of the trust store .p12.</string>
+    <string name="mdm_callsign_title">Callsign</string>
+    <string name="mdm_callsign_desc">Callsign on the map. Set here, the user cannot change it.</string>
+    <string name="mdm_team_title">Team</string>
+    <string name="mdm_team_desc">Team colour. Set here, the user cannot change it.</string>
+    <string name="mdm_role_title">Role</string>
+    <string name="mdm_role_desc">Team role. Set here, the user cannot change it.</string>
+    <string name="mdm_start_beacon_title">Start the beacon</string>
+    <string name="mdm_start_beacon_desc">Turn the beacon on when this configuration arrives and whenever the device starts. The user can still stop it.</string>
+
+    <string-array name="mdm_protocol_entries">
+        <item>TLS (ssl)</item>
+        <item>TCP</item>
+    </string-array>
+    <string-array name="mdm_protocol_values">
+        <item>ssl</item>
+        <item>tcp</item>
+    </string-array>
+    <string-array name="mdm_team_entries">
+        <item>White</item>
+        <item>Yellow</item>
+        <item>Orange</item>
+        <item>Magenta</item>
+        <item>Red</item>
+        <item>Maroon</item>
+        <item>Purple</item>
+        <item>Dark Blue</item>
+        <item>Blue</item>
+        <item>Cyan</item>
+        <item>Teal</item>
+        <item>Green</item>
+        <item>Dark Green</item>
+        <item>Brown</item>
+    </string-array>
+    <string-array name="mdm_role_entries">
+        <item>Team Member</item>
+        <item>Team Lead</item>
+        <item>HQ</item>
+        <item>Sniper</item>
+        <item>Medic</item>
+        <item>Forward Observer</item>
+        <item>RTO</item>
+        <item>K9</item>
+    </string-array>
+</resources>
