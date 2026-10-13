@@ -6,7 +6,7 @@
 
 #show: userguide.with(
    plugin-name: "TAK Beacon",
-   plugin-version: "1.2.0",
+   plugin-version: "1.3.1",
    platform: "ATAK",
    platform-version: "5.6 \u{2013} 5.8",
 )
@@ -57,7 +57,7 @@ If ATAK has no client certificate for that server, TAK Beacon adds it and asks y
 #tak-slide[
 = Start and stop reporting
 #block()
-- *Start beacon* turns reporting on. The first time, TAK Beacon opens to explain how it uses your location and to ask for permission, then returns you to ATAK.
+- *Start beacon* turns reporting on (once the app is installed; if TAK Beacon isn't running, the plugin starts it first). The first time, TAK Beacon opens to explain how it uses your location and to ask for permission, then returns you to ATAK.
 - While reporting, Android shows a *TAK Beacon* notification. *Stop beacon* in the pane, or *Stop* in the notification, turns it off.
 - The pane shows the state (_Transmitting_, _Waiting for GPS_, _Paused while ATAK is open_), how many servers are connected, and when the last report was sent.
 

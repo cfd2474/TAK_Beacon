@@ -1,12 +1,12 @@
 ATAK Plugin — TAK Beacon
 
-**Download TAK Beacon 1.2.0** (pick the one matching your ATAK-CIV version, sideload, then load it in ATAK's Plugins manager):
+**Download TAK Beacon 1.3.1** (pick the one matching your ATAK-CIV version, sideload, then load it in ATAK's Plugins manager):
 
-- **ATAK-CIV 5.6:** https://github.com/cfd2474/TAK_Beacon/releases/download/v1.2.0/ATAK-Plugin-TAKBeacon-1.2.0--5.6.0-civ-release.apk
-- **ATAK-CIV 5.7:** https://github.com/cfd2474/TAK_Beacon/releases/download/v1.2.0/ATAK-Plugin-TAKBeacon-1.2.0--5.7.0-civ-release.apk
-- **ATAK-CIV 5.8:** https://github.com/cfd2474/TAK_Beacon/releases/download/v1.2.0/ATAK-Plugin-TAKBeacon-1.2.0--5.8.0-civ-release.apk
+- **ATAK-CIV 5.6:** https://github.com/cfd2474/TAK_Beacon/releases/download/v1.3.1/ATAK-Plugin-TAKBeacon-1.3.1--5.6.0-civ-release.apk
+- **ATAK-CIV 5.7:** https://github.com/cfd2474/TAK_Beacon/releases/download/v1.3.1/ATAK-Plugin-TAKBeacon-1.3.1--5.7.0-civ-release.apk
+- **ATAK-CIV 5.8:** https://github.com/cfd2474/TAK_Beacon/releases/download/v1.3.1/ATAK-Plugin-TAKBeacon-1.3.1--5.8.0-civ-release.apk
 
-**Standalone app, no ATAK:** `TAKBeacon-app-1.3.0.apk` on the [v1.2.0 release page](https://github.com/cfd2474/TAK_Beacon/releases/tag/v1.2.0) (the same Play-signed app the plugin installs; Android 8+)
+**Standalone app, no ATAK:** `TAKBeacon-app-1.3.1.apk` on the [v1.3.1 release page](https://github.com/cfd2474/TAK_Beacon/releases/tag/v1.3.1) (the same Play-signed app the plugin installs; Android 8+)
 
 All releases: https://github.com/cfd2474/TAK_Beacon/releases
 
@@ -43,15 +43,14 @@ PURPOSE AND CAPABILITIES
 _________________________________________________________________
 STATUS
 
-  Version 1.2.0, for ATAK-CIV 5.6.0, 5.7.0 and 5.8.0. Carries the TAK Beacon
-  app 1.3.0, Play-signed, and checks that the installed app matches it:
-  an older app raises an ATAK notification and is updated from the pane,
-  with the beacon restored afterwards.
+  Version 1.3.1, for ATAK-CIV 5.6.0, 5.7.0 and 5.8.0. From 1.3.1 the plugin
+  and the TAK Beacon app it carries share one version number. The plugin
+  checks that the installed app matches, raises an ATAK notification when it
+  is out of date and updates it from the pane; Start beacon starts the app
+  first when it isn't running.
 
-  1.0.0 and 1.1.0 were signed by tak.gov for all three versions. 1.2.0 is
-  verified on the ATAK-CIV 5.8.0.5 SDK developer build: it detects an older
-  installed app, updates it to 1.3.0 and turns a locked, running beacon back
-  on after the update.
+  1.0.0, 1.1.0 and 1.2.0 were signed by tak.gov for all three versions. 1.3.1
+  is verified on the ATAK-CIV 5.8.0.5 SDK developer build.
 
 _________________________________________________________________
 POINT OF CONTACTS

@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -26,6 +28,8 @@ import java.util.List;
 final class BeaconPane implements BeaconBridge.Listener {
 
     private static final String TAG = "TAKBeaconPane";
+    /** How long to wait for the app to come up and connect before opening it instead. */
+    private static final long START_WAIT_MS = 5_000L;
 
     private final Context pluginContext;
     private final MapView mapView;
@@ -43,6 +47,20 @@ final class BeaconPane implements BeaconBridge.Listener {
     private final Button stop;
     private final Button share;
     private boolean restoreAfterUpdate;
+    /** Start was tapped while the app wasn't running: send START once it connects. */
+    private boolean startWhenConnected;
+    private final Handler main = new Handler(Looper.getMainLooper());
+    private final Runnable startFallback = new Runnable() {
+        @Override
+        public void run() {
+            if (!startWhenConnected)
+                return;
+            startWhenConnected = false;
+            // The app didn't come up in the background: open it, it starts the beacon itself.
+            say("Opening TAK Beacon to start the beacon\u2026");
+            openApp(BridgeProtocol.ACTION_START_TRACKING);
+        }
+    };
 
     BeaconPane(Context pluginContext, MapView mapView, BeaconBridge bridge, AppInstaller installer) {
         this.pluginContext = pluginContext;
@@ -75,8 +93,7 @@ final class BeaconPane implements BeaconBridge.Listener {
         start.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                say("Starting…");
-                bridge.startTracking();
+                onStartClicked();
             }
         });
         stop.setOnClickListener(new View.OnClickListener() {
@@ -110,11 +127,25 @@ final class BeaconPane implements BeaconBridge.Listener {
     }
 
     void dispose() {
+        main.removeCallbacks(startFallback);
         bridge.removeListener(this);
     }
 
     @Override
     public void onStateChanged(BeaconBridge.State state) {
+        // Start was tapped before the app was running: it is up now.
+        if (startWhenConnected && state.bound && state.runState != null) {
+            startWhenConnected = false;
+            main.removeCallbacks(startFallback);
+            if (state.locked) {
+                say("TAK Beacon is locked. Unlock it in the TAK Beacon app with its PIN first.");
+            } else if ("STOPPED".equals(state.runState)) {
+                say("Starting\u2026");
+                bridge.startTracking();
+            } else {
+                say("The beacon is already on.");
+            }
+        }
         // After an update the app was killed: bring the beacon back if it was on.
         if (restoreAfterUpdate && state.bound && state.runState != null) {
             restoreAfterUpdate = false;
@@ -177,7 +208,8 @@ final class BeaconPane implements BeaconBridge.Listener {
 
         final String run = s.bound ? s.runState : null;
         final boolean running = run != null && !"STOPPED".equals(run);
-        start.setEnabled(s.bound && !running && !s.locked);
+        // Installed is enough: an app that isn't running is started first (onStartClicked).
+        start.setEnabled(installed && !running && !(s.bound && s.locked) && !startWhenConnected);
         stop.setEnabled(s.bound && running && !s.locked);
         share.setEnabled(s.bound && !s.locked);
 
@@ -185,8 +217,8 @@ final class BeaconPane implements BeaconBridge.Listener {
             setState("Not installed", R.color.state_off);
             beaconDetail.setText("Install the app to start reporting.");
         } else if (!s.bound) {
-            setState("Connecting to app", R.color.state_waiting);
-            beaconDetail.setText("");
+            setState(startWhenConnected ? "Starting TAK Beacon" : "Connecting to app", R.color.state_waiting);
+            beaconDetail.setText(startWhenConnected ? "" : "TAK Beacon isn't running. Start beacon starts it.");
         } else {
             if (s.emergency != null) setState("EMERGENCY ACTIVE", R.color.state_alert);
             else if ("TRANSMITTING".equals(run)) setState("Transmitting", R.color.state_live);
@@ -221,6 +253,31 @@ final class BeaconPane implements BeaconBridge.Listener {
 
     private void say(String text) {
         message.setText(text == null ? "" : text);
+    }
+
+    /**
+     * Checks before sending START: the app must be installed (checked now, not from
+     * the last render), and running; if it isn't running it is started first.
+     */
+    private void onStartClicked() {
+        final AppInstaller.Status st = installer.status();
+        if (st == AppInstaller.Status.NOT_INSTALLED || st == AppInstaller.Status.NO_EMBEDDED_APP) {
+            say("TAK Beacon is not installed. Install it first.");
+            render();
+            return;
+        }
+        if (bridge.isBound() && bridge.state().runState != null) {
+            say("Starting\u2026");
+            bridge.startTracking();
+            return;
+        }
+        // Not running: binding starts the app's process; START goes out once it connects.
+        startWhenConnected = true;
+        say("Starting TAK Beacon\u2026");
+        bridge.refresh();
+        main.removeCallbacks(startFallback);
+        main.postDelayed(startFallback, START_WAIT_MS);
+        render();
     }
 
     private void onInstallClicked() {
