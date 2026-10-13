@@ -1,10 +1,10 @@
 ATAK Plugin — TAK Beacon
 
-**Download TAK Beacon 1.0.0** (pick the one matching your ATAK-CIV version, sideload, then load it in ATAK's Plugins manager):
+**Download TAK Beacon 1.1.0** (pick the one matching your ATAK-CIV version, sideload, then load it in ATAK's Plugins manager):
 
-- **ATAK-CIV 5.6:** https://github.com/cfd2474/TAK_Beacon/releases/download/v1.0.0/ATAK-Plugin-TAKBeacon-1.0.0--5.6.0-civ-release.apk
-- **ATAK-CIV 5.7:** https://github.com/cfd2474/TAK_Beacon/releases/download/v1.0.0/ATAK-Plugin-TAKBeacon-1.0.0--5.7.0-civ-release.apk
-- **ATAK-CIV 5.8:** https://github.com/cfd2474/TAK_Beacon/releases/download/v1.0.0/ATAK-Plugin-TAKBeacon-1.0.0--5.8.0-civ-release.apk
+- **ATAK-CIV 5.6:** https://github.com/cfd2474/TAK_Beacon/releases/download/v1.1.0/ATAK-Plugin-TAKBeacon-1.1.0--5.6.0-civ-release.apk
+- **ATAK-CIV 5.7:** https://github.com/cfd2474/TAK_Beacon/releases/download/v1.1.0/ATAK-Plugin-TAKBeacon-1.1.0--5.7.0-civ-release.apk
+- **ATAK-CIV 5.8:** https://github.com/cfd2474/TAK_Beacon/releases/download/v1.1.0/ATAK-Plugin-TAKBeacon-1.1.0--5.8.0-civ-release.apk
 
 All releases: https://github.com/cfd2474/TAK_Beacon/releases
 
@@ -38,17 +38,13 @@ PURPOSE AND CAPABILITIES
 _________________________________________________________________
 STATUS
 
-  Version 1.0.0. Built for ATAK-CIV 5.6.0, 5.7.0 and 5.8.0.
+  Version 1.1.0, for ATAK-CIV 5.6.0, 5.7.0 and 5.8.0. Carries the TAK Beacon
+  app 1.2.0 (satellite-ready, UDP broadcast, PIN lock), Play-signed.
 
-  Signed by tak.gov for ATAK-CIV 5.6.0, 5.7.0 and 5.8.0 (Fortify: 0
-  findings) and tested on a device with official ATAK.
-
-  Also verified on the ATAK-CIV 5.8.0.5 SDK developer build (Android 14 emulator):
-  plugin loads; pane opens; the embedded app installs through Android's
-  installer; the plugin connects to the app; an ATAK TCP server is sent to the
-  app, approved there, and the app reports to it with ATAK's callsign and UID;
-  start from the plugin opens the app's location-permission flow when needed.
-
+  1.0.0 was signed by tak.gov for all three versions (Fortify: 0 findings)
+  and tested on a device with official ATAK. 1.1.0 is verified on the
+  ATAK-CIV 5.8.0.5 SDK developer build: the plugin installs the embedded app,
+  connects to it, and shows its satellite and lock states.
 
 _________________________________________________________________
 POINT OF CONTACTS

@@ -193,7 +193,7 @@ final class BeaconPane implements BeaconBridge.Listener {
                 final long ago = Math.max(0, (System.currentTimeMillis() - s.lastSentMs) / 1000);
                 d.append(" · last report ").append(ago).append(" s ago");
             }
-            if (s.servers == 0)
+            if (s.servers == 0 && !s.locked)
                 d.append("\nNo servers yet: send one of ATAK's below.");
             beaconDetail.setText(d.toString());
         }
