@@ -49,6 +49,9 @@ installs and drives it.
   position is kept. A server that keeps rejecting the device's certificate is
   paused after five attempts (shown with a Retry button) instead of being
   retried forever, which could get the phone banned by TAK Server's fail2ban.
+- **TAK chat:** receives direct, All Chat Rooms and team messages while the
+  beacon is connected, with notifications, quick and inline replies, and
+  delivered/read receipts; read only while locked.
 - **Map symbol** (CoT type: ground unit, vehicle, aircraft, boat) and UDP
   broadcast **only when no server is connected**.
 - **MDM managed configuration** ([docs/mdm-managed-config.md](docs/mdm-managed-config.md)):

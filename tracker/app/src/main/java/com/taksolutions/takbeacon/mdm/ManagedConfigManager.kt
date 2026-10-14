@@ -102,6 +102,7 @@ class ManagedConfigManager(private val app: BeaconApp) {
                 team = cfg.team ?: s.team,
                 role = cfg.role ?: s.role,
                 pliCotType = cfg.cotType ?: s.pliCotType,
+                messagingMode = cfg.messaging ?: s.messagingMode,
                 startOnBoot = s.startOnBoot || cfg.startBeacon,
             )
         }

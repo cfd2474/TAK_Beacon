@@ -34,6 +34,7 @@ the user's own setting.
 | `team` | choice | | `White` … `Brown` (the TAK team colours). |
 | `role` | choice | | `Team Member`, `Team Lead`, `HQ`, `Sniper`, `Medic`, `Forward Observer`, `RTO`, `K9`. |
 | `cot_type` | string | `a-f-G-U-C` | Map symbol (CoT type) of position reports, e.g. `a-f-G-E-V-C` for a vehicle (1.3.4+). |
+| `messaging` | choice `full`/`read_only`/`off` | `full` | TAK chat: receive and reply, receive only, or off (1.3.5+). |
 | `start_beacon` | bool | false | Turn the beacon on when the configuration arrives and at every boot. The user can still stop it. |
 
 Keys holding secrets contain "password", so consoles that mask such keys (ATLAS

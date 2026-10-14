@@ -121,6 +121,14 @@
         android:description="@string/mdm_cot_type_desc" />
 
     <restriction
+        android:key="messaging"
+        android:restrictionType="choice"
+        android:entries="@array/mdm_messaging_entries"
+        android:entryValues="@array/mdm_messaging_values"
+        android:title="@string/mdm_messaging_title"
+        android:description="@string/mdm_messaging_desc" />
+
+    <restriction
         android:key="start_beacon"
         android:restrictionType="bool"
         android:defaultValue="false"

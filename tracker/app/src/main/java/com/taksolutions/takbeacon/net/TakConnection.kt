@@ -13,7 +13,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import com.taksolutions.takbeacon.chat.GeoChat
 import java.io.IOException
+import java.io.InputStreamReader
 import java.io.OutputStream
 import java.net.InetSocketAddress
 import java.net.Socket
@@ -58,7 +60,15 @@ class TakConnection(
     private val selfUid: () -> String,
     private val pingIntervalMs: () -> Long,
     private val onStatus: (String, LinkStatus) -> Unit,
+    /** Each chat event the server sends (other traffic is read and dropped): (serverId, xml). */
+    private val onChat: (String, String) -> Unit = { _, _ -> },
+    /** A queued chat event (by its tag) has been written to the server. */
+    private val onChatWritten: (String) -> Unit = {},
 ) {
+    private class Outgoing(val xml: String, val tag: String?)
+
+    // Chat keeps its order and is never conflated with positions; bounded all the same.
+    private val chat = Channel<Outgoing>(CHAT_CAPACITY, BufferOverflow.DROP_OLDEST)
     private val latestPosition = AtomicReference<String?>(null)
     private val priority = Channel<String>(PRIORITY_CAPACITY, BufferOverflow.DROP_OLDEST)
     private val wake = Channel<Unit>(Channel.CONFLATED)
@@ -69,6 +79,12 @@ class TakConnection(
     /** Queues [xml]; [priority] for emergency alerts and cancels. */
     fun send(xml: String, priority: Boolean = false) {
         if (priority) this.priority.trySend(xml) else latestPosition.set(xml)
+        wake.trySend(Unit)
+    }
+
+    /** Queues a chat message or receipt; [tag] comes back through onChatWritten once sent. */
+    fun sendChat(xml: String, tag: String? = null) {
+        chat.trySend(Outgoing(xml, tag))
         wake.trySend(Unit)
     }
 
@@ -156,15 +172,21 @@ class TakConnection(
         return tls
     }
 
-    /** Writes emergencies first, then the newest position; pings when idle so dead links surface. */
+    /** Writes emergencies first, then chat, then the newest position; pings when idle so dead links surface. */
     private suspend fun pump(out: OutputStream, reader: Job) {
         while (reader.isActive) {
+            val chatOut = if (priority.isEmpty) chat.tryReceive().getOrNull() else null
             val xml = priority.tryReceive().getOrNull()
+                ?: chatOut?.xml
                 ?: latestPosition.getAndSet(null)
                 // Woken: look again (the wake may be for an event already sent). Idle: ping.
                 ?: if (withTimeoutOrNull(pingIntervalMs()) { wake.receive() } != null) continue else Cot.ping(selfUid())
             out.write(xml.toByteArray(Charsets.UTF_8))
             out.flush()
+            if (chatOut != null) {
+                chatOut.tag?.let(onChatWritten)
+                continue
+            }
             if (!xml.contains("type=\"t-x-c-t\"")) {
                 lastSent = System.currentTimeMillis()
                 onStatus(server.id, LinkStatus(LinkState.CONNECTED, null, lastSent))
@@ -173,18 +195,44 @@ class TakConnection(
         throw IOException("Server closed the connection")
     }
 
-    /** Reads and discards; a read error (such as a TLS alert) is kept for [run] to classify. */
+    /**
+     * Reads the server's stream: chat events go to [onChat], everything else is
+     * dropped. A read error (such as a TLS alert) is kept for [run] to classify.
+     */
     private fun drain(s: Socket, error: AtomicReference<IOException?>) {
-        val buf = ByteArray(16 * 1024)
-        val input = s.getInputStream()
+        val buf = CharArray(16 * 1024)
+        val input = InputStreamReader(s.getInputStream(), Charsets.UTF_8)
+        val pending = StringBuilder()
         try {
-            while (input.read(buf) >= 0) { /* discard */ }
+            while (true) {
+                val n = input.read(buf)
+                if (n < 0) break
+                pending.append(buf, 0, n)
+                splitEvents(pending) { ev -> if (GeoChat.isChat(ev)) runCatching { onChat(server.id, ev) } }
+            }
         } catch (e: IOException) {
             error.set(e)
         }
     }
 
     companion object {
+        private const val CHAT_CAPACITY = 64
+        /** Unfinished data kept while waiting for an event's end; beyond it, the partial is dropped. */
+        private const val MAX_PENDING_CHARS = 256 * 1024
+
+        /** Takes each complete `<event>...</event>` off the front of [pending]. */
+        fun splitEvents(pending: StringBuilder, onEvent: (String) -> Unit) {
+            while (true) {
+                val end = pending.indexOf("</event>")
+                if (end < 0) break
+                val stop = end + "</event>".length
+                val start = pending.lastIndexOf("<event", end).let { if (it < 0) 0 else it }
+                if (stop - start <= GeoChat.MAX_EVENT_CHARS) onEvent(pending.substring(start, stop))
+                pending.delete(0, stop)
+            }
+            if (pending.length > MAX_PENDING_CHARS) pending.setLength(0)
+        }
+
         /** Consecutive certificate failures before reconnecting stops. */
         const val MAX_CREDENTIAL_FAILURES = 5
         /** A link that stays up this long is healthy: failure count and backoff reset. */

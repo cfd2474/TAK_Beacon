@@ -17,6 +17,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.PlayArrow
@@ -76,6 +77,8 @@ fun HomeScreen(
     onCoordFormat: (CoordFormat) -> Unit,
     onOpenServers: () -> Unit,
     onLockToggle: () -> Unit,
+    unreadMessages: Int = 0,
+    onOpenMessages: () -> Unit = {},
 ) {
     val running = tracker.runState != RunState.STOPPED
     val status = BeaconTheme.status
@@ -98,6 +101,23 @@ fun HomeScreen(
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         tracker.emergency?.let { EmergencyBanner(it, onCancelEmergency) }
+        if (unreadMessages > 0) {
+            androidx.compose.foundation.layout.Row(
+                Modifier.fillMaxWidth().clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer)
+                    .clickable(onClick = onOpenMessages)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(androidx.compose.material.icons.Icons.AutoMirrored.Filled.Chat, null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    if (unreadMessages == 1) "1 unread message" else "$unreadMessages unread messages",
+                    Modifier.weight(1f), color = MaterialTheme.colorScheme.onPrimaryContainer, style = MaterialTheme.typography.titleSmall,
+                )
+                Text("Open", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
+            }
+        }
 
         // --- hero ---------------------------------------------------------------
         Section {

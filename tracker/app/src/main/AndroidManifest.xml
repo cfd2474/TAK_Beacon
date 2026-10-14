@@ -115,6 +115,10 @@
         </receiver>
 
         <receiver
+            android:name=".chat.ChatReplyReceiver"
+            android:exported="false" />
+
+        <receiver
             android:name=".service.NotificationActionReceiver"
             android:exported="false" />
     </application>

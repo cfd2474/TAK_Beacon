@@ -35,6 +35,8 @@ data class ManagedConfig(
     val role: Role? = null,
     /** CoT type (map symbol) of the position report. */
     val cotType: String? = null,
+    /** TAK chat: off, read only or full. */
+    val messaging: com.taksolutions.takbeacon.data.MessagingMode? = null,
     /** Turn the beacon on when the config arrives and on every boot (the user can still stop it). */
     val startBeacon: Boolean = false,
 ) {
@@ -49,6 +51,7 @@ data class ManagedConfig(
             if (team != null) add(FIELD_TEAM)
             if (role != null) add(FIELD_ROLE)
             if (cotType != null) add(FIELD_COT_TYPE)
+            if (messaging != null) add(FIELD_MESSAGING)
             if (startBeacon) add(FIELD_START_ON_BOOT)
         }
 
@@ -76,6 +79,7 @@ data class ManagedConfig(
         const val FIELD_ROLE = "role"
         const val FIELD_START_ON_BOOT = "start_on_boot"
         const val FIELD_COT_TYPE = "cot_type"
+        const val FIELD_MESSAGING = "messaging"
 
         // Restriction keys (res/xml/app_restrictions.xml). Secrets contain "password"
         // so MDM consoles mask them.
@@ -97,6 +101,7 @@ data class ManagedConfig(
         const val K_ROLE = "role"
         const val K_START_BEACON = "start_beacon"
         const val K_COT_TYPE = "cot_type"
+        const val K_MESSAGING = "messaging"
 
         /**
          * Reads a restrictions bundle flattened to a map. Returns null when nothing usable
@@ -138,6 +143,12 @@ data class ManagedConfig(
                 role = str(K_ROLE)?.let { r -> Role.fromCot(r) ?: Role.entries.firstOrNull { it.name.equals(r, true) } },
                 startBeacon = bool(K_START_BEACON),
                 cotType = str(K_COT_TYPE)?.takeIf(com.taksolutions.takbeacon.data.BeaconSettings::validCotType),
+                messaging = when (str(K_MESSAGING)?.lowercase()) {
+                    "off" -> com.taksolutions.takbeacon.data.MessagingMode.OFF
+                    "read_only" -> com.taksolutions.takbeacon.data.MessagingMode.READ_ONLY
+                    "full" -> com.taksolutions.takbeacon.data.MessagingMode.FULL
+                    else -> null
+                },
             )
             return c.takeIf { it.hasServer || it.managedFields.isNotEmpty() || it.version != null }
         }

@@ -35,6 +35,8 @@
     <string name="mdm_role_desc">Team role. Set here, the user cannot change it.</string>
     <string name="mdm_cot_type_title">Map symbol (CoT type)</string>
     <string name="mdm_cot_type_desc">CoT type of the position report, for example a-f-G-U-C (ground unit, the default) or a-f-G-E-V-C (vehicle). Set here, the user cannot change it.</string>
+    <string name="mdm_messaging_title">TAK chat</string>
+    <string name="mdm_messaging_desc">Receive and reply to TAK chat (full), receive only (read only), or turn chat off. Set here, the user cannot change it.</string>
     <string name="mdm_start_beacon_title">Start the beacon</string>
     <string name="mdm_start_beacon_desc">Turn the beacon on when this configuration arrives and whenever the device starts. The user can still stop it.</string>
 
@@ -45,6 +47,16 @@
     <string-array name="mdm_protocol_values">
         <item>ssl</item>
         <item>tcp</item>
+    </string-array>
+    <string-array name="mdm_messaging_entries">
+        <item>Full (receive and reply)</item>
+        <item>Read only</item>
+        <item>Off</item>
+    </string-array>
+    <string-array name="mdm_messaging_values">
+        <item>full</item>
+        <item>read_only</item>
+        <item>off</item>
     </string-array>
     <string-array name="mdm_team_entries">
         <item>White</item>

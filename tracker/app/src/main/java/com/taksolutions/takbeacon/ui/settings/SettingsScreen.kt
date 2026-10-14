@@ -74,6 +74,7 @@ fun SettingsScreen(
     /** Settings the MDM sets (ManagedConfig.FIELD_*): shown read-only. */
     managedFields: Set<String> = emptySet(),
     managedByOrg: Boolean = false,
+    onClearMessages: () -> Unit = {},
 ) {
     val mCallsign = "callsign" in managedFields
     val mTeam = "team" in managedFields
@@ -297,6 +298,21 @@ fun SettingsScreen(
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 6.dp),
             )
+        }
+
+        if (s.messagingMode != com.taksolutions.takbeacon.data.MessagingMode.OFF) {
+            Section("Messages") {
+                Text(
+                    "TAK chat sent to this device, to All Chat Rooms and to your team arrives while the beacon is on." +
+                        if (s.messagingMode == com.taksolutions.takbeacon.data.MessagingMode.READ_ONLY) " Replies are turned off by your organization." else "",
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                ToggleRow("Notify for group chat", "All Chat Rooms and team messages notify, as well as direct messages.",
+                    s.chatGroupNotify) { v -> onChange { it.copy(chatGroupNotify = v) } }
+                ToggleRow("Send read receipts", "Let senders see when a direct message was delivered and read.",
+                    s.chatReceipts) { v -> onChange { it.copy(chatReceipts = v) } }
+                TextButton(enabled = !s.locked, onClick = onClearMessages) { Text("Clear messages on this device") }
+            }
         }
 
         Section("Lock") {

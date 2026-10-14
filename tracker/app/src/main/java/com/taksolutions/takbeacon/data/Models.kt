@@ -118,6 +118,12 @@ data class BeaconSettings(
     val pliCotType: String = DEFAULT_COT_TYPE,
     /** With UDP broadcast on: send routine reports over UDP only while no server is connected. */
     val udpOnlyWhenDisconnected: Boolean = false,
+    /** TAK chat: off, read only, or full (an MDM can restrict it). */
+    val messagingMode: MessagingMode = MessagingMode.FULL,
+    /** Send delivered/read receipts for direct messages. */
+    val chatReceipts: Boolean = true,
+    /** Notify for group and team chat as well as direct messages. */
+    val chatGroupNotify: Boolean = true,
 ) {
     val hasPin: Boolean get() = pinHash != null && pinSalt != null
 
@@ -141,6 +147,8 @@ data class BeaconSettings(
         fun validCotType(t: String): Boolean = Regex("^a-[a-z](-[A-Za-z0-9]{1,8}){1,8}$").matches(t)
     }
 }
+
+enum class MessagingMode { OFF, READ_ONLY, FULL }
 
 /** TAK emergency types and their CoT event types. */
 enum class EmergencyType(val label: String, val cotType: String, val detailType: String) {

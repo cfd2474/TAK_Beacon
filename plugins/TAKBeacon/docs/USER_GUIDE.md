@@ -165,6 +165,24 @@ Turn on **Only when no server is connected** to send routine reports over UDP
 only while no TAK server is connected (so a connected phone isn't on the map
 twice). Emergencies always go over UDP when it is on.
 
+## Messages (TAK chat)
+
+While the beacon is on and connected, TAK Beacon receives TAK chat: messages
+sent to you, to **All Chat Rooms** and to your team's room. Each one notifies
+(turn off group notifications in **Settings → Messages**) and appears in the
+**Messages** tab, which shows an unread count.
+
+- Reply from the conversation, with the quick replies (*Copy*, *En route*,
+  *Need assistance*), or straight from the notification's **Reply**.
+- Post to All Chat Rooms or your team room from their conversations.
+- ATAK users see when you received and read their direct messages; turn this
+  off in **Settings → Messages → Send read receipts**.
+- While TAK Beacon is locked you can read but not reply.
+- While the beacon is paused for ATAK, messages are saved without a
+  notification: ATAK on the same phone shows them.
+
+Messages are kept on the phone, encrypted, for up to 30 days (500 at most).
+
 ## 8. Lock with a PIN
 
 Use the lock to keep a configured beacon exactly as it is (on a tracker issued

@@ -30,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CellTower
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,6 +38,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -70,6 +73,10 @@ import com.taksolutions.takbeacon.service.RunState
 import com.taksolutions.takbeacon.ui.components.PinDialog
 import com.taksolutions.takbeacon.ui.settings.PinAction
 import com.taksolutions.takbeacon.ui.home.HomeScreen
+import com.taksolutions.takbeacon.ui.chat.MessagesScreen
+import com.taksolutions.takbeacon.chat.ChatManager
+import com.taksolutions.takbeacon.data.MessagingMode
+import com.taksolutions.takbeacon.net.LinkState
 import com.taksolutions.takbeacon.ui.servers.EnrollDialogs
 import com.taksolutions.takbeacon.ui.servers.ManualServerDialog
 import com.taksolutions.takbeacon.ui.servers.QrScannerDialog
@@ -81,6 +88,11 @@ import com.taksolutions.takbeacon.ui.theme.Mono
 class MainActivity : ComponentActivity() {
 
     private val vm: AppViewModel by viewModels()
+
+    /** A chat thread to open, from a message notification. */
+    private var openThreadRequest by mutableStateOf<String?>(null)
+    /** The chat thread on screen; it gets no notifications while the app is in front. */
+    private var chatOnScreen: String? = null
 
     /** Runtime permissions not granted yet; refreshed on every resume. */
     private var missing by mutableStateOf(emptyList<Perm>())
@@ -100,8 +112,15 @@ class MainActivity : ComponentActivity() {
         handleIntent(intent)
     }
 
+    override fun onPause() {
+        super.onPause()
+        // In the background, every message notifies.
+        BeaconApp.from(this).chat.visibleThread = null
+    }
+
     override fun onResume() {
         super.onResume()
+        BeaconApp.from(this).chat.visibleThread = chatOnScreen
         refreshPermissions()
         if (vm.settings.value?.kioskLock == true) runCatching { startLockTask() }
     }
@@ -119,6 +138,7 @@ class MainActivity : ComponentActivity() {
                 if (!app.locked || app.wasRunning) startRequestedByPlugin = true
             }
             ACTION_REVIEW_ATAK_PROFILE -> Unit // the approval dialog shows whenever a profile is pending
+            ChatManager.ACTION_OPEN_THREAD -> openThreadRequest = intent.getStringExtra(ChatManager.EXTRA_THREAD)
         }
     }
 
@@ -145,6 +165,9 @@ class MainActivity : ComponentActivity() {
         val toast by vm.toast.collectAsStateWithLifecycle()
         val pending by vm.pendingProfile.collectAsStateWithLifecycle()
         val managed by BeaconApp.from(this).managed.state.collectAsStateWithLifecycle()
+        val chat = BeaconApp.from(this).chat
+        val chatData by chat.data.collectAsStateWithLifecycle()
+        var openThread by rememberSaveable { mutableStateOf<String?>(null) }
 
         var tab by rememberSaveable { mutableStateOf(0) }
         var scanning by remember { mutableStateOf(false) }
@@ -279,7 +302,7 @@ class MainActivity : ComponentActivity() {
                             Column {
                                 Text("TAK Beacon", style = MaterialTheme.typography.titleLarge)
                                 settings?.let {
-                                    Text(listOf("Beacon", "Servers", "Settings")[tab], style = MaterialTheme.typography.labelSmall,
+                                    Text(listOf("Beacon", "Servers", "Settings", "Messages")[tab], style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
@@ -295,6 +318,14 @@ class MainActivity : ComponentActivity() {
             bottomBar = {
                 NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
                     NavigationBarItem(tab == 0, { tab = 0 }, { Icon(Icons.Outlined.CellTower, null) }, label = { Text("Beacon") })
+                    if (settings?.messagingMode != MessagingMode.OFF) {
+                        val unread = chatData.unread()
+                        NavigationBarItem(tab == 3, { tab = 3 }, {
+                            BadgedBox(badge = { if (unread > 0) Badge { Text(if (unread > 99) "99+" else unread.toString()) } }) {
+                                Icon(Icons.AutoMirrored.Outlined.Chat, null)
+                            }
+                        }, label = { Text("Messages") })
+                    }
                     NavigationBarItem(tab == 1, { tab = 1 }, { Icon(Icons.Outlined.Dns, null) }, label = { Text("Servers") })
                     NavigationBarItem(tab == 2, { tab = 2 }, { Icon(Icons.Outlined.Settings, null) }, label = { Text("Settings") })
                 }
@@ -303,6 +334,18 @@ class MainActivity : ComponentActivity() {
             containerColor = MaterialTheme.colorScheme.background,
         ) { padding ->
             val s = settings ?: return@Scaffold
+            // A message notification was tapped.
+            LaunchedEffect(openThreadRequest) {
+                openThreadRequest?.let { tab = 3; openThread = it; openThreadRequest = null }
+            }
+            if (tab == 3 && s.messagingMode == MessagingMode.OFF) tab = 0
+            // The open thread is read, and notifies nothing while on screen.
+            val showing = if (tab == 3) openThread else null
+            LaunchedEffect(showing, chatData.unread(showing)) {
+                chatOnScreen = showing
+                chat.visibleThread = showing
+                showing?.let { chat.markRead(it) }
+            }
             when (tab) {
                 0 -> HomeScreen(
                     settings = s, tracker = tracker, servers = servers, links = links, contentPadding = padding,
@@ -315,6 +358,8 @@ class MainActivity : ComponentActivity() {
                     onCancelEmergency = { BeaconService.cancelEmergency(this) },
                     onCoordFormat = { f -> vm.updateSettings { it.copy(coordFormat = f) } },
                     onOpenServers = { tab = 1 },
+                    unreadMessages = if (s.messagingMode == MessagingMode.OFF) 0 else chatData.unread(),
+                    onOpenMessages = { tab = 3; openThread = null },
                     onLockToggle = {
                         when {
                             s.locked -> pinAction = PinAction.UNLOCK
@@ -322,6 +367,22 @@ class MainActivity : ComponentActivity() {
                             else -> { lockAfterSet = true; pinAction = PinAction.SET }
                         }
                     },
+                )
+                3 -> MessagesScreen(
+                    data = chatData,
+                    offered = listOfNotNull(chat.threadFor(ChatManager.KEY_ALL, s), chat.threadFor(chat.teamKey(s), s)),
+                    openKey = openThread,
+                    onOpen = { openThread = it },
+                    canSend = !s.locked && s.messagingMode == MessagingMode.FULL,
+                    sendBlockedReason = when {
+                        s.messagingMode == MessagingMode.READ_ONLY -> "Replies are turned off by your organization"
+                        s.locked -> "Locked: unlock to reply"
+                        else -> null
+                    },
+                    connected = links.values.any { it.state == LinkState.CONNECTED },
+                    onSend = { key, text -> chat.send(key, text) },
+                    onUnlock = { pinAction = PinAction.UNLOCK },
+                    contentPadding = padding,
                 )
                 1 -> ServersScreen(
                     servers = servers, links = links, contentPadding = padding,
@@ -362,6 +423,7 @@ class MainActivity : ComponentActivity() {
                     onGrantPermissions = { requestPermissions(userAsked = true) },
                     managedFields = managed.fields,
                     managedByOrg = managed.managed,
+                    onClearMessages = { chat.clear(); vm.toast("Messages cleared") },
                 )
             }
         }

@@ -207,6 +207,21 @@ If a server presents a certificate the device does not recognise, TAK Beacon sho
 ]
 
 #tak-slide[
+= Messages (TAK chat)
+#toolbox.side-by-side(columns: (6fr, 3fr, 4fr))[
+While the beacon is on and connected, TAK Beacon receives TAK chat sent to you, to *All Chat Rooms* and to your team's room. Each message notifies and appears in the *Messages* tab.
+
+- Reply in the conversation, with the quick replies, or from the notification's *Reply*. Post to All Chat Rooms or your team room from their conversations.
+- Senders see when you received and read their direct messages (*Settings, Messages* turns this off).
+- Locked: read only. Paused for ATAK: messages are saved silently, since ATAK shows them.
+][
+#phone("screens/app_messages_thread.jpg")
+][
+#atak("screens/messages_notification.jpg")
+]
+]
+
+#tak-slide[
 = Lock with a PIN
 #toolbox.side-by-side(columns: (5fr, 3fr, 3fr, 4fr))[
 On the Beacon screen, tap *Lock with a PIN* and choose a 4\u{2013}8 digit PIN; TAK Beacon locks as soon as it is set.

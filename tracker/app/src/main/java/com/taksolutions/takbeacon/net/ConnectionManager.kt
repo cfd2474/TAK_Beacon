@@ -17,6 +17,9 @@ class ConnectionManager(
     private val selfUid: () -> String,
     private val pingIntervalMs: () -> Long,
 ) {
+    /** Set by the app: chat events received (serverId, xml), and chat sends confirmed (tag). */
+    @Volatile var onChat: (String, String) -> Unit = { _, _ -> }
+    @Volatile var onChatWritten: (String) -> Unit = {}
 
     private val connections = mutableMapOf<String, TakConnection>()
     private val _status = MutableStateFlow<Map<String, LinkStatus>>(emptyMap())
@@ -36,10 +39,10 @@ class ConnectionManager(
         }
         for ((id, server) in wanted) {
             if (id !in connections) {
-                val conn = TakConnection(server, certs, selfUid, pingIntervalMs) { sid, st ->
+                val conn = TakConnection(server, certs, selfUid, pingIntervalMs, onStatus = { sid, st ->
                     // A late callback from a connection that was just replaced must not resurrect it.
                     synchronized(this) { if (connections[sid]?.server == server) _status.update { it + (sid to st) } }
-                }
+                }, onChat = { sid, xml -> onChat(sid, xml) }, onChatWritten = { tag -> onChatWritten(tag) })
                 connections[id] = conn
                 conn.start(scope)
             }
@@ -51,6 +54,18 @@ class ConnectionManager(
     fun broadcast(xml: String, priority: Boolean = false): Int {
         connections.values.forEach { it.send(xml, priority) }
         return connections.size
+    }
+
+    /**
+     * Queues a chat event on [serverId]'s connection, or on every connection when
+     * that one isn't running. Returns the number of connections it was queued on.
+     */
+    @Synchronized
+    fun sendChat(xml: String, serverId: String?, tag: String? = null): Int {
+        val target = serverId?.let { connections[it] }
+        val list = if (target != null) listOf(target) else connections.values.toList()
+        list.forEach { it.sendChat(xml, tag) }
+        return list.size
     }
 
     /** Resumes a server that stopped retrying after certificate failures (or cuts its backoff short). */

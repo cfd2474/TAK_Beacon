@@ -8,6 +8,7 @@ import com.taksolutions.takbeacon.data.ServerRepository
 import com.taksolutions.takbeacon.data.SettingsRepository
 import com.taksolutions.takbeacon.enroll.DataPackageImporter
 import com.taksolutions.takbeacon.enroll.EnrollmentClient
+import com.taksolutions.takbeacon.chat.ChatManager
 import com.taksolutions.takbeacon.mdm.ManagedConfigManager
 import com.taksolutions.takbeacon.net.ConnectionManager
 import com.taksolutions.takbeacon.security.CertStore
@@ -34,6 +35,8 @@ class BeaconApp : Application() {
     lateinit var dataPackages: DataPackageImporter
         private set
     lateinit var managed: ManagedConfigManager
+        private set
+    lateinit var chat: ChatManager
         private set
 
     val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -69,6 +72,8 @@ class BeaconApp : Application() {
             settings.settings.collect { uid = it.uid; trustedAtakSigner = it.trustedAtakSigner; locked = it.locked; wasRunning = it.wasRunning }
         }
         createChannels()
+        chat = ChatManager(this)
+        chat.start()
         managed = ManagedConfigManager(this)
         managed.register()
         appScope.launch { managed.apply() }
@@ -83,11 +88,16 @@ class BeaconApp : Application() {
         nm.createNotificationChannel(
             NotificationChannel(CHANNEL_ALERTS, getString(R.string.channel_alerts), NotificationManager.IMPORTANCE_HIGH)
         )
+        nm.createNotificationChannel(
+            NotificationChannel(CHANNEL_MESSAGES, getString(R.string.channel_messages), NotificationManager.IMPORTANCE_HIGH)
+                .apply { lockscreenVisibility = android.app.Notification.VISIBILITY_PRIVATE }
+        )
     }
 
     companion object {
         const val CHANNEL_TRACKING = "tracking"
         const val CHANNEL_ALERTS = "alerts"
+        const val CHANNEL_MESSAGES = "messages"
 
         fun from(context: Context) = context.applicationContext as BeaconApp
     }

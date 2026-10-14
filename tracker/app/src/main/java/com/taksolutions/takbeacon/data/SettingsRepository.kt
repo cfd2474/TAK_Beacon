@@ -46,6 +46,9 @@ class SettingsRepository(private val context: Context) {
         val PERMS_PROMPTED = booleanPreferencesKey("permissions_prompted")
         val COT_TYPE = stringPreferencesKey("pli_cot_type")
         val UDP_WHEN_DISCONNECTED = booleanPreferencesKey("udp_only_when_disconnected")
+        val MESSAGING = stringPreferencesKey("messaging_mode")
+        val CHAT_RECEIPTS = booleanPreferencesKey("chat_receipts")
+        val CHAT_GROUP_NOTIFY = booleanPreferencesKey("chat_group_notify")
     }
 
     val settings: Flow<BeaconSettings> = context.settingsStore.data.map(::settingsFrom)
@@ -98,6 +101,9 @@ class SettingsRepository(private val context: Context) {
             p[K.PERMS_PROMPTED] = n.permissionsPrompted
             p[K.COT_TYPE] = n.pliCotType.takeIf(BeaconSettings::validCotType) ?: BeaconSettings.DEFAULT_COT_TYPE
             p[K.UDP_WHEN_DISCONNECTED] = n.udpOnlyWhenDisconnected
+            p[K.MESSAGING] = n.messagingMode.name
+            p[K.CHAT_RECEIPTS] = n.chatReceipts
+            p[K.CHAT_GROUP_NOTIFY] = n.chatGroupNotify
         }
     }
 
@@ -129,6 +135,9 @@ class SettingsRepository(private val context: Context) {
         permissionsPrompted = p[K.PERMS_PROMPTED] ?: false,
         pliCotType = p[K.COT_TYPE]?.takeIf(BeaconSettings::validCotType) ?: BeaconSettings.DEFAULT_COT_TYPE,
         udpOnlyWhenDisconnected = p[K.UDP_WHEN_DISCONNECTED] ?: false,
+        messagingMode = p[K.MESSAGING]?.let { runCatching { MessagingMode.valueOf(it) }.getOrNull() } ?: MessagingMode.FULL,
+        chatReceipts = p[K.CHAT_RECEIPTS] ?: true,
+        chatGroupNotify = p[K.CHAT_GROUP_NOTIFY] ?: true,
     )
 
     companion object {
