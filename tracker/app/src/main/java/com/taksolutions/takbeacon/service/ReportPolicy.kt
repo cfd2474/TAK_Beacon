@@ -9,6 +9,14 @@ object ReportPolicy {
     const val PING_MS = 30_000L
     const val SATELLITE_PING_MS = 120_000L
 
+    /**
+     * Seconds until the next report is due: the interval, but never later than two
+     * thirds of the last report's stale time, so the marker never goes stale between
+     * reports when the rate slows (stopping in Adaptive mode, low battery, satellite).
+     */
+    fun dueSeconds(intervalSeconds: Int, lastStaleSeconds: Int?): Int =
+        if (lastStaleSeconds == null) intervalSeconds else minOf(intervalSeconds, maxOf(5, lastStaleSeconds * 2 / 3))
+
     fun intervalSeconds(s: BeaconSettings, onSatellite: Boolean): Int =
         if (onSatellite) maxOf(s.intervalSeconds, s.satelliteIntervalSeconds) else s.intervalSeconds
 

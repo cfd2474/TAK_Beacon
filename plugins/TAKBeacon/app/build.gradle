@@ -8,7 +8,7 @@
 
 buildscript {
 
-    ext.PLUGIN_VERSION = "1.4.0"
+    ext.PLUGIN_VERSION = "1.4.1"
     ext.ATAK_VERSION = '5.8.0'
     // Local builds for another ATAK line pass -Patak.version=5.6.0 together with
     // -Psdk.path / -Ptakdev.plugin for that line (scripts/build.sh does all three).

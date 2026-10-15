@@ -65,6 +65,8 @@ class BeaconService : LifecycleService() {
     private val motion = MotionTracker()
     @Volatile private var reportNow = false
     private var lastReportedCourse: Double? = null
+    /** Stale time of the last report: the next one must come before it runs out. */
+    private var lastStaleSeconds: Int? = null
     private var lastEmergencyElapsed = 0L
     private var lastNotificationText = ""
 
@@ -160,12 +162,14 @@ class BeaconService : LifecycleService() {
         // satellite, whose rate is the slowest allowed).
         val early = adaptive && !onSatellite && fix != null && sinceReportS >= AdaptiveReportPolicy.MIN_GAP_S &&
             (reportNow || AdaptiveReportPolicy.turned(lastReportedCourse, fix.courseDeg, motion.speedMps, sinceReportS))
-        if (runState == RunState.TRANSMITTING && fix != null && (now - lastPliElapsed >= interval * 1000L || early)) {
+        val due = ReportPolicy.dueSeconds(interval, lastStaleSeconds)
+        if (runState == RunState.TRANSMITTING && fix != null && (now - lastPliElapsed >= due * 1000L || early)) {
             lastPliElapsed = now
             reportNow = false
             lastReportedCourse = fix.courseDeg
             // A slower rate (satellite, or Adaptive while still) needs the marker to outlive it.
             val stale = if (onSatellite || adaptive) maxOf(s.staleSeconds, interval * 3) else s.staleSeconds
+            lastStaleSeconds = stale
             send(Cot.pli(identity(s), fix, stale, battery))
             BeaconStatus.update { it.copy(lastSentMs = System.currentTimeMillis()) }
         }

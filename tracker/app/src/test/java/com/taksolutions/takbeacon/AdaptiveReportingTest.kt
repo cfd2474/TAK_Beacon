@@ -105,6 +105,18 @@ class AdaptiveReportingTest {
         assertEquals(180, AdaptiveReportPolicy.intervalSeconds(Motion.STATIONARY, 80, false, true, 60))
     }
 
+    @Test fun markerNeverGoesStaleWhenTheRateSlows() {
+        val policy = com.taksolutions.takbeacon.service.ReportPolicy
+        // Last report while driving: stale 120 s. Now stationary (180 s): due by 80 s.
+        assertEquals(80, policy.dueSeconds(180, 120))
+        // Once a stationary report (stale 540 s) went out, the 3 min interval applies.
+        assertEquals(180, policy.dueSeconds(180, 540))
+        // Faster than the stale bound: unchanged.
+        assertEquals(10, policy.dueSeconds(10, 120))
+        assertEquals(180, policy.dueSeconds(180, null))
+        assertEquals(5, policy.dueSeconds(30, 3))
+    }
+
     @Test fun turns() {
         assertTrue(AdaptiveReportPolicy.turned(10.0, 50.0, 10.0, 6))
         assertTrue(AdaptiveReportPolicy.turned(350.0, 25.0, 10.0, 6)) // across north
