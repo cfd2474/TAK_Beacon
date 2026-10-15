@@ -129,6 +129,14 @@
         android:description="@string/mdm_messaging_desc" />
 
     <restriction
+        android:key="reporting_mode"
+        android:restrictionType="choice"
+        android:entries="@array/mdm_reporting_entries"
+        android:entryValues="@array/mdm_reporting_values"
+        android:title="@string/mdm_reporting_title"
+        android:description="@string/mdm_reporting_desc" />
+
+    <restriction
         android:key="start_beacon"
         android:restrictionType="bool"
         android:defaultValue="false"

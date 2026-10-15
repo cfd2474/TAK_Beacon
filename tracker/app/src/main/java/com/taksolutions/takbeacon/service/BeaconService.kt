@@ -30,6 +30,7 @@ import com.taksolutions.takbeacon.cot.Cot
 import com.taksolutions.takbeacon.cot.Fix
 import com.taksolutions.takbeacon.cot.Identity
 import com.taksolutions.takbeacon.data.BeaconSettings
+import com.taksolutions.takbeacon.data.ReportingMode
 import com.taksolutions.takbeacon.data.EmergencyType
 import com.taksolutions.takbeacon.geo.Coordinates
 import com.taksolutions.takbeacon.net.NetworkWatcher
@@ -59,6 +60,11 @@ class BeaconService : LifecycleService() {
     @Volatile private var lastFixElapsed = 0L
     @Volatile private var lastGpsElapsed = 0L
     private var lastPliElapsed = 0L
+    // Adaptive reporting: movement from the fixes, a report requested by a step up in
+    // movement, and the course at the last report (for turns).
+    private val motion = MotionTracker()
+    @Volatile private var reportNow = false
+    private var lastReportedCourse: Double? = null
     private var lastEmergencyElapsed = 0L
     private var lastNotificationText = ""
 
@@ -142,13 +148,24 @@ class BeaconService : LifecycleService() {
             s, serverCount, hasFix = fix != null, atakRunning = BeaconStatus.atakRunning,
             onSatellite = onSatellite, emergency = emergency != null,
         )
-        val interval = ReportPolicy.intervalSeconds(s, onSatellite)
         val battery = batteryPct()
+        val adaptive = s.reportingMode == ReportingMode.ADAPTIVE
+        val interval = if (adaptive) {
+            AdaptiveReportPolicy.intervalSeconds(motion.motion, battery, charging(), onSatellite,
+                ReportPolicy.intervalSeconds(s, onSatellite = true))
+        } else ReportPolicy.intervalSeconds(s, onSatellite)
 
-        if (runState == RunState.TRANSMITTING && fix != null && now - lastPliElapsed >= interval * 1000L) {
+        val sinceReportS = (now - lastPliElapsed) / 1000
+        // Adaptive: movement starting, speeding up or turning reports at once (never over
+        // satellite, whose rate is the slowest allowed).
+        val early = adaptive && !onSatellite && fix != null && sinceReportS >= AdaptiveReportPolicy.MIN_GAP_S &&
+            (reportNow || AdaptiveReportPolicy.turned(lastReportedCourse, fix.courseDeg, motion.speedMps, sinceReportS))
+        if (runState == RunState.TRANSMITTING && fix != null && (now - lastPliElapsed >= interval * 1000L || early)) {
             lastPliElapsed = now
-            // Over satellite the marker must outlive the slower reporting.
-            val stale = if (onSatellite) maxOf(s.staleSeconds, interval * 3) else s.staleSeconds
+            reportNow = false
+            lastReportedCourse = fix.courseDeg
+            // A slower rate (satellite, or Adaptive while still) needs the marker to outlive it.
+            val stale = if (onSatellite || adaptive) maxOf(s.staleSeconds, interval * 3) else s.staleSeconds
             send(Cot.pli(identity(s), fix, stale, battery))
             BeaconStatus.update { it.copy(lastSentMs = System.currentTimeMillis()) }
         }
@@ -160,6 +177,7 @@ class BeaconService : LifecycleService() {
         BeaconStatus.update {
             it.copy(
                 runState = runState, batteryPct = battery, effectiveIntervalSeconds = interval,
+                motion = if (adaptive) motion.motion else null,
                 udpError = if (s.udpBroadcast) udp?.lastError?.value else null,
             )
         }
@@ -185,6 +203,9 @@ class BeaconService : LifecycleService() {
         )
         val first = lastFix == null
         lastFix = fix
+        // Timed by when the fix was taken, not when it arrived: delivery jitter isn't speed.
+        val fixedAt = if (loc.elapsedRealtimeNanos > 0) loc.elapsedRealtimeNanos / 1_000_000 else now
+        if (motion.update(fixedAt, fix.lat, fix.lon, fix.speedMps, fix.ce)) reportNow = true
         lastFixElapsed = now
         BeaconStatus.update { it.copy(fix = fix) }
         if (first) lastPliElapsed = 0L // report the first fix immediately
@@ -251,6 +272,9 @@ class BeaconService : LifecycleService() {
         os = Build.VERSION.SDK_INT.toString(),
         version = BuildConfig.VERSION_NAME,
     )
+
+    private fun charging(): Boolean =
+        getSystemService(BatteryManager::class.java)?.isCharging == true
 
     private fun batteryPct(): Int? =
         getSystemService(BatteryManager::class.java)?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)

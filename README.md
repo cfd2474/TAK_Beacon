@@ -49,6 +49,9 @@ installs and drives it.
   position is kept. A server that keeps rejecting the device's certificate is
   paused after five attempts (shown with a Retry button) instead of being
   retried forever, which could get the phone banned by TAK Server's fail2ban.
+- **Adaptive reporting** (opt-in): reports by movement, from every 3 minutes
+  when still to every 5 seconds at speed, at once when movement starts or the
+  vehicle turns; longer on low battery; never faster than satellite allows.
 - **TAK chat:** receives direct, All Chat Rooms and team messages while the
   beacon is connected, with notifications, quick and inline replies, and
   delivered/read receipts; read only while locked.

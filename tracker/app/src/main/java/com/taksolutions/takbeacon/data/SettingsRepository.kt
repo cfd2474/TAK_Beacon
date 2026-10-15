@@ -49,6 +49,7 @@ class SettingsRepository(private val context: Context) {
         val MESSAGING = stringPreferencesKey("messaging_mode")
         val CHAT_RECEIPTS = booleanPreferencesKey("chat_receipts")
         val CHAT_GROUP_NOTIFY = booleanPreferencesKey("chat_group_notify")
+        val REPORTING_MODE = stringPreferencesKey("reporting_mode")
     }
 
     val settings: Flow<BeaconSettings> = context.settingsStore.data.map(::settingsFrom)
@@ -104,6 +105,7 @@ class SettingsRepository(private val context: Context) {
             p[K.MESSAGING] = n.messagingMode.name
             p[K.CHAT_RECEIPTS] = n.chatReceipts
             p[K.CHAT_GROUP_NOTIFY] = n.chatGroupNotify
+            p[K.REPORTING_MODE] = n.reportingMode.name
         }
     }
 
@@ -138,6 +140,7 @@ class SettingsRepository(private val context: Context) {
         messagingMode = p[K.MESSAGING]?.let { runCatching { MessagingMode.valueOf(it) }.getOrNull() } ?: MessagingMode.FULL,
         chatReceipts = p[K.CHAT_RECEIPTS] ?: true,
         chatGroupNotify = p[K.CHAT_GROUP_NOTIFY] ?: true,
+        reportingMode = p[K.REPORTING_MODE]?.let { runCatching { ReportingMode.valueOf(it) }.getOrNull() } ?: ReportingMode.FIXED,
     )
 
     companion object {

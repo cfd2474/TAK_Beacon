@@ -124,6 +124,8 @@ data class BeaconSettings(
     val chatReceipts: Boolean = true,
     /** Notify for group and team chat as well as direct messages. */
     val chatGroupNotify: Boolean = true,
+    /** Fixed interval, or Adaptive (follows movement). */
+    val reportingMode: ReportingMode = ReportingMode.FIXED,
 ) {
     val hasPin: Boolean get() = pinHash != null && pinSalt != null
 
@@ -149,6 +151,8 @@ data class BeaconSettings(
 }
 
 enum class MessagingMode { OFF, READ_ONLY, FULL }
+
+enum class ReportingMode { FIXED, ADAPTIVE }
 
 /** TAK emergency types and their CoT event types. */
 enum class EmergencyType(val label: String, val cotType: String, val detailType: String) {

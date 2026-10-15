@@ -19,6 +19,8 @@ data class TrackerState(
     val onSatellite: Boolean = false,
     /** Seconds between reports right now (slower over satellite). */
     val effectiveIntervalSeconds: Int? = null,
+    /** Detected movement, in Adaptive mode. */
+    val motion: Motion? = null,
     val udpError: String? = null,
 )
 

@@ -37,6 +37,8 @@ data class ManagedConfig(
     val cotType: String? = null,
     /** TAK chat: off, read only or full. */
     val messaging: com.taksolutions.takbeacon.data.MessagingMode? = null,
+    /** Fixed or Adaptive reporting. */
+    val reportingMode: com.taksolutions.takbeacon.data.ReportingMode? = null,
     /** Turn the beacon on when the config arrives and on every boot (the user can still stop it). */
     val startBeacon: Boolean = false,
 ) {
@@ -52,6 +54,7 @@ data class ManagedConfig(
             if (role != null) add(FIELD_ROLE)
             if (cotType != null) add(FIELD_COT_TYPE)
             if (messaging != null) add(FIELD_MESSAGING)
+            if (reportingMode != null) add(FIELD_REPORTING_MODE)
             if (startBeacon) add(FIELD_START_ON_BOOT)
         }
 
@@ -80,6 +83,7 @@ data class ManagedConfig(
         const val FIELD_START_ON_BOOT = "start_on_boot"
         const val FIELD_COT_TYPE = "cot_type"
         const val FIELD_MESSAGING = "messaging"
+        const val FIELD_REPORTING_MODE = "reporting_mode"
 
         // Restriction keys (res/xml/app_restrictions.xml). Secrets contain "password"
         // so MDM consoles mask them.
@@ -102,6 +106,7 @@ data class ManagedConfig(
         const val K_START_BEACON = "start_beacon"
         const val K_COT_TYPE = "cot_type"
         const val K_MESSAGING = "messaging"
+        const val K_REPORTING_MODE = "reporting_mode"
 
         /**
          * Reads a restrictions bundle flattened to a map. Returns null when nothing usable
@@ -147,6 +152,11 @@ data class ManagedConfig(
                     "off" -> com.taksolutions.takbeacon.data.MessagingMode.OFF
                     "read_only" -> com.taksolutions.takbeacon.data.MessagingMode.READ_ONLY
                     "full" -> com.taksolutions.takbeacon.data.MessagingMode.FULL
+                    else -> null
+                },
+                reportingMode = when (str(K_REPORTING_MODE)?.lowercase()) {
+                    "adaptive" -> com.taksolutions.takbeacon.data.ReportingMode.ADAPTIVE
+                    "fixed" -> com.taksolutions.takbeacon.data.ReportingMode.FIXED
                     else -> null
                 },
             )

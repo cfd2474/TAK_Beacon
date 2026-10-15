@@ -88,6 +88,18 @@ you to sign in to get its own.
   ATAK is running*), how many servers are connected, and when the last report was
   sent.
 
+### Adaptive reporting
+
+**Settings → Reporting → Adaptive reporting** (off by default) reports by
+movement instead of a fixed interval: every 3 minutes when still, 30 seconds
+walking, 10 seconds driving and 5 seconds above about 30 mph. It reports at once
+when you start moving, speed up, or turn while driving, and slows down only
+after you have stayed slower for a while (so a traffic light doesn't change it).
+On low battery (20% or less, not charging) the intervals are longer. Satellite
+never reports faster than its own rate, and emergencies are unaffected. The
+Beacon screen shows the current state, for example *Adaptive · Walking · Every
+30s*. Your organization can set it.
+
 ### Pause while ATAK is running
 
 In TAK Beacon, **Settings → ATAK → Pause while ATAK is running** stops TAK

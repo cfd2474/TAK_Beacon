@@ -142,6 +142,7 @@ The server then shows in TAK Beacon's *Servers* list. A server marked _Needs a c
 - *Start beacon* turns reporting on. If TAK Beacon isn't running, the plugin starts it first.
 - While reporting, Android shows a *TAK Beacon* notification. *Stop beacon* in the pane or the app, or *Stop* in the notification, turns it off.
 - The pane shows the state (_Transmitting_, _Waiting for GPS_, _Paused while ATAK is running_), how many servers are connected, and when the last report was sent.
+- *Adaptive reporting* (TAK Beacon *Settings, Reporting*) reports by movement: 3 min still, 30 s walking, 10 s driving, 5 s fast, and at once when you start moving or turn.
 ][
 #atak("screens/pane_installed.jpg")
 ][

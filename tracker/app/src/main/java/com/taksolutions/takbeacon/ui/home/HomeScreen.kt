@@ -303,7 +303,10 @@ private fun subline(t: TrackerState, s: BeaconSettings, servers: List<ServerConf
                 if (enabled > 0) "$connected/$enabled connected" else null,
                 if (s.udpBroadcast) "UDP ${s.udpHost}:${s.udpPort}" else null,
             ).joinToString(" + ")
-            (if (t.onSatellite) "Via satellite · " else "") + "Every ${every}s · $where · $ago" +
+            val everyText = if (every >= 60 && every % 60 == 0) "${every / 60} min" else "${every}s"
+            (if (t.onSatellite) "Via satellite · " else "") +
+                (t.motion?.let { "Adaptive · ${it.label} · " } ?: "") +
+                "Every $everyText · $where · $ago" +
                 (t.udpError?.let { "\nUDP: $it" } ?: "")
         }
     }

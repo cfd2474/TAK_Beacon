@@ -81,6 +81,8 @@ fun SettingsScreen(
     val mRole = "role" in managedFields
     val mBoot = "start_on_boot" in managedFields
     val mCot = "cot_type" in managedFields
+    val mMode = "reporting_mode" in managedFields
+    val adaptive = s.reportingMode == com.taksolutions.takbeacon.data.ReportingMode.ADAPTIVE
     CompositionLocalProvider(LocalSettingsLocked provides s.locked) {
     Column(
         Modifier.verticalScroll(rememberScrollState()).padding(contentPadding).padding(horizontal = 16.dp, vertical = 8.dp),
@@ -151,8 +153,15 @@ fun SettingsScreen(
         }
 
         Section("Reporting") {
-            Text("Report every", style = MaterialTheme.typography.labelLarge)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ToggleRow(
+                "Adaptive reporting",
+                (if (mMode) "Set by your organization. " else "") +
+                    "Report by movement: every 3 min when still, 30 s walking, 10 s driving, 5 s fast, " +
+                    "and at once when you start moving or turn. Longer on low battery. Emergencies are unaffected.",
+                adaptive, enabled = !mMode,
+            ) { v -> onChange { it.copy(reportingMode = if (v) com.taksolutions.takbeacon.data.ReportingMode.ADAPTIVE else com.taksolutions.takbeacon.data.ReportingMode.FIXED) } }
+            if (!adaptive) Text("Report every", style = MaterialTheme.typography.labelLarge)
+            if (!adaptive) FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(5, 10, 15, 30, 60, 120, 300).forEach { sec ->
                     LockChip(s.intervalSeconds == sec, { onChange { it.copy(intervalSeconds = sec, staleSeconds = maxOf(it.staleSeconds, sec * 3)) } },
                         { Text(if (sec < 60) "${sec}s" else "${sec / 60}m") })
