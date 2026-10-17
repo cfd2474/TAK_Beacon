@@ -79,6 +79,11 @@ fun SettingsScreen(
     /** TAK Beacon may lift Do Not Disturb for a priority alert. */
     dndAccess: Boolean = true,
     onDndAccess: () -> Unit = {},
+    /** Priority alerts may show full screen over the lock screen / over other apps. */
+    fullScreenAccess: Boolean = true,
+    onFullScreenAccess: () -> Unit = {},
+    overlayAccess: Boolean = true,
+    onOverlayAccess: () -> Unit = {},
 ) {
     val mCallsign = "callsign" in managedFields
     val mTeam = "team" in managedFields
@@ -357,6 +362,22 @@ fun SettingsScreen(
                         modifier = Modifier.padding(top = 6.dp),
                     )
                     OutlinedButton(onClick = onDndAccess, modifier = Modifier.padding(top = 6.dp)) { Text("Allow through Do Not Disturb") }
+                }
+                if (!fullScreenAccess) {
+                    Text(
+                        "To show the alert full screen when the phone is locked or asleep, allow full-screen notifications.",
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 6.dp),
+                    )
+                    OutlinedButton(onClick = onFullScreenAccess, modifier = Modifier.padding(top = 6.dp)) { Text("Allow full screen on lock screen") }
+                }
+                if (!overlayAccess) {
+                    Text(
+                        "To bring the alert in front of other apps you are using, allow TAK Beacon to display over other apps.",
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 6.dp),
+                    )
+                    OutlinedButton(onClick = onOverlayAccess, modifier = Modifier.padding(top = 6.dp)) { Text("Allow over other apps") }
                 }
             }
         }

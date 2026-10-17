@@ -209,7 +209,17 @@ ignoring case, TAK Beacon goes into alert mode:
   It stays until acknowledged: swiping it away brings it back. Opening TAK
   Beacon shows the alert until you tap **Acknowledge**, which also opens the
   conversation. You can acknowledge while TAK Beacon is locked.
+- With the phone locked or asleep, the screen turns on and the alert fills it,
+  over the lock screen, with **Acknowledge** and **Acknowledge and open
+  conversation** (which asks you to unlock first). While you are using
+  another app, the same alert screen opens in front of it; **Acknowledge**
+  takes you back to that app.
 - Afterwards the alarm volume goes back to what it was.
+
+For the full-screen alert, Settings may show two more buttons: **Allow full
+screen on lock screen** (Android 14 and later) and **Allow over other apps**
+(in the list that opens, tap TAK Beacon and turn it on). Without them the
+alert still sounds, as a notification.
 
 Do Not Disturb normally lets alarms through. If yours silences alarms, tap
 **Allow through Do Not Disturb** and allow TAK Beacon: it then lifts Do Not

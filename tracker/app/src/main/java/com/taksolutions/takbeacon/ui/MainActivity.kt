@@ -98,6 +98,9 @@ class MainActivity : ComponentActivity() {
     private var missing by mutableStateOf(emptyList<Perm>())
     /** Priority alerts may lift Do Not Disturb; refreshed on every resume. */
     private var dndAccess by mutableStateOf(true)
+    /** Priority alerts may go full screen over the lock screen, and over other apps. */
+    private var fullScreenAccess by mutableStateOf(true)
+    private var overlayAccess by mutableStateOf(true)
 
     /** Set when the ATAK plugin opened us only to start tracking; we step back to ATAK after. */
     private var startRequestedByPlugin by mutableStateOf(false)
@@ -118,11 +121,13 @@ class MainActivity : ComponentActivity() {
         super.onPause()
         // In the background, every message notifies.
         BeaconApp.from(this).chat.visibleThread = null
+        BeaconApp.from(this).alerts.appInFront = false
     }
 
     override fun onResume() {
         super.onResume()
         BeaconApp.from(this).chat.visibleThread = chatOnScreen
+        BeaconApp.from(this).alerts.appInFront = true
         refreshPermissions()
         if (vm.settings.value?.kioskLock == true) runCatching { startLockTask() }
     }
@@ -146,7 +151,10 @@ class MainActivity : ComponentActivity() {
 
     private fun refreshPermissions() {
         missing = Perm.missing(this)
-        dndAccess = getSystemService(android.app.NotificationManager::class.java).isNotificationPolicyAccessGranted
+        val nm = getSystemService(android.app.NotificationManager::class.java)
+        dndAccess = nm.isNotificationPolicyAccessGranted
+        fullScreenAccess = Build.VERSION.SDK_INT < 34 || nm.canUseFullScreenIntent()
+        overlayAccess = Settings.canDrawOverlays(this)
     }
 
     /** For a permission Android will no longer prompt for (denied twice): its own settings page. */
@@ -430,6 +438,16 @@ class MainActivity : ComponentActivity() {
                     onTestAlert = { BeaconApp.from(this).alerts.trigger("test", "TAK Beacon", "This is a test of the priority alert.", null) },
                     dndAccess = dndAccess,
                     onDndAccess = { runCatching { startActivity(Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)) } },
+                    fullScreenAccess = fullScreenAccess,
+                    onFullScreenAccess = {
+                        if (Build.VERSION.SDK_INT >= 34) runCatching {
+                            startActivity(Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, android.net.Uri.parse("package:$packageName")))
+                        }
+                    },
+                    overlayAccess = overlayAccess,
+                    onOverlayAccess = {
+                        runCatching { startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:$packageName"))) }
+                    },
                 )
             }
         }
