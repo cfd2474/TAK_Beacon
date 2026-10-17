@@ -56,6 +56,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -104,6 +108,10 @@ class MainActivity : ComponentActivity() {
 
     /** Set when the ATAK plugin opened us only to start tracking; we step back to ATAK after. */
     private var startRequestedByPlugin by mutableStateOf(false)
+    /** This launch came from the plugin (to start tracking): no permission walk over ATAK. */
+    private var launchedByPlugin = false
+    /** Counts resumes, so the permission walk continues after a settings page. */
+    private var resumes by mutableStateOf(0)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -129,6 +137,7 @@ class MainActivity : ComponentActivity() {
         BeaconApp.from(this).chat.visibleThread = chatOnScreen
         BeaconApp.from(this).alerts.appInFront = true
         refreshPermissions()
+        resumes++
         if (vm.settings.value?.kioskLock == true) runCatching { startLockTask() }
     }
 
@@ -143,6 +152,7 @@ class MainActivity : ComponentActivity() {
             BridgeProtocol.ACTION_START_TRACKING -> BeaconApp.from(this).let { app ->
                 // Locked: only to restore a beacon that was on (e.g. after an update).
                 if (!app.locked || app.wasRunning) startRequestedByPlugin = true
+                launchedByPlugin = true
             }
             ACTION_REVIEW_ATAK_PROFILE -> Unit // the approval dialog shows whenever a profile is pending
             ChatManager.ACTION_OPEN_THREAD -> openThreadRequest = intent.getStringExtra(ChatManager.EXTRA_THREAD)
@@ -150,7 +160,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun refreshPermissions() {
-        missing = Perm.missing(this)
+        missing = Perm.missing(this, chatOn = vm.settings.value?.messagingMode != MessagingMode.OFF)
         val nm = getSystemService(android.app.NotificationManager::class.java)
         dndAccess = nm.isNotificationPolicyAccessGranted
         fullScreenAccess = Build.VERSION.SDK_INT < 34 || nm.canUseFullScreenIntent()
@@ -188,7 +198,9 @@ class MainActivity : ComponentActivity() {
         var backgroundDisclosure by remember { mutableStateOf(false) }
         var pinAction by remember { mutableStateOf<PinAction?>(null) }
         var lockAfterSet by remember { mutableStateOf(false) }
-        var batteryPrompt by remember { mutableStateOf(false) }
+        // A special permission being explained, and one whose settings page is open.
+        var special by remember { mutableStateOf<Perm?>(null) }
+        var awaiting by remember { mutableStateOf<Perm?>(null) }
         // Permission flow: walk every missing permission (first run, banner, Settings),
         // or only what the beacon needs to start; [fromUser] when the user asked for it.
         var walkAll by remember { mutableStateOf(false) }
@@ -212,7 +224,12 @@ class MainActivity : ComponentActivity() {
             // Denied instantly with no rationale: Android won't ask again, only its settings page can.
             val blocked = SystemClock.elapsedRealtime() - askedAt[0] < 600 && !shouldShowRequestPermissionRationale(p.permission)
             if (fromUser && blocked) openAppSettings() else vm.toast(message)
-            walkAll = false; startAfter = false; fromUser = false; bootAfter = false; skipped.clear()
+            if (walkAll && !(fromUser && blocked) && !startAfter) {
+                // Walking everything: go on to the rest; the banner keeps showing this one.
+                bootAfter = false; skipped += p; advance()
+            } else {
+                walkAll = false; startAfter = false; fromUser = false; bootAfter = false; skipped.clear()
+            }
         }
         val notifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
             // Not fatal: the beacon runs without its notification permission, just less visibly.
@@ -240,16 +257,23 @@ class MainActivity : ComponentActivity() {
 
         advance = {
             refreshPermissions()
-            val next = missing.firstOrNull { it !in skipped && (walkAll || it != Perm.BACKGROUND) }
-            when (next) {
-                Perm.LOCATION -> locationDisclosure = true
-                Perm.NOTIFICATIONS -> notifications.launch(Perm.NOTIFICATIONS.permission)
-                Perm.BACKGROUND -> backgroundDisclosure = true
-                null -> {
+            val next = missing.firstOrNull { it !in skipped && (walkAll || it in Perm.TO_START) }
+            when {
+                next == Perm.LOCATION -> locationDisclosure = true
+                next == Perm.NOTIFICATIONS -> notifications.launch(Perm.NOTIFICATIONS.permission)
+                next == Perm.BACKGROUND -> backgroundDisclosure = true
+                next != null -> special = next
+                else -> {
                     walkAll = false; fromUser = false; skipped.clear()
                     if (startAfter) { startAfter = false; startTracking() }
                 }
             }
+        }
+
+        /** "Not now" on a disclosure: skip it and go on when walking everything; otherwise stop. */
+        fun declined(p: Perm) {
+            if (walkAll && !startAfter) { skipped += p; advance() }
+            else { walkAll = false; startAfter = false; fromUser = false; skipped.clear() }
         }
 
         /** Every missing permission, one prompt after another (first run, banner, Settings). */
@@ -274,8 +298,9 @@ class MainActivity : ComponentActivity() {
             if (launchChecksDone) return@LaunchedEffect
             launchChecksDone = true
             refreshPermissions()
-            if (!s.permissionsPrompted && missing.isNotEmpty()) {
-                vm.markPermissionsPrompted()
+            // Every launch: ask for whatever is missing (not when ATAK opened us just to start tracking).
+            if (!launchedByPlugin && missing.isNotEmpty()) {
+                if (!s.permissionsPrompted) vm.markPermissionsPrompted()
                 requestPermissions(userAsked = false)
             }
             // "Start on boot" also means: start whenever the app is opened.
@@ -284,9 +309,11 @@ class MainActivity : ComponentActivity() {
             if (restore && tracker.runState == RunState.STOPPED && has(Manifest.permission.ACCESS_FINE_LOCATION)) {
                 startTracking()
             }
-            // Reports stop in Doze when the system restricts the app's battery use.
-            val pm = getSystemService(PowerManager::class.java)
-            if (!pm.isIgnoringBatteryOptimizations(packageName)) batteryPrompt = true
+        }
+
+        // Back from a special permission's settings page: on to the next one.
+        LaunchedEffect(resumes) {
+            awaiting?.let { p -> awaiting = null; skipped += p; advance() }
         }
 
         LaunchedEffect(startRequestedByPlugin) {
@@ -511,7 +538,7 @@ class MainActivity : ComponentActivity() {
         if (locationDisclosure) {
             // Prominent disclosure, shown before the system prompt (Google Play user data policy).
             AlertDialog(
-                onDismissRequest = { locationDisclosure = false; walkAll = false; startAfter = false; fromUser = false },
+                onDismissRequest = { locationDisclosure = false; declined(Perm.LOCATION) },
                 title = { Text("Share your location") },
                 text = {
                     Text(
@@ -528,13 +555,13 @@ class MainActivity : ComponentActivity() {
                     }) { Text("Continue") }
                 },
                 dismissButton = { TextButton(onClick = {
-                    locationDisclosure = false; walkAll = false; startAfter = false; fromUser = false
+                    locationDisclosure = false; declined(Perm.LOCATION)
                 }) { Text("Not now") } },
             )
         }
         if (backgroundDisclosure) {
             AlertDialog(
-                onDismissRequest = { backgroundDisclosure = false; walkAll = false; bootAfter = false; fromUser = false },
+                onDismissRequest = { backgroundDisclosure = false; bootAfter = false; declined(Perm.BACKGROUND) },
                 title = { Text("Allow location all the time") },
                 text = {
                     Text(
@@ -551,7 +578,7 @@ class MainActivity : ComponentActivity() {
                     }) { Text("Continue") }
                 },
                 dismissButton = { TextButton(onClick = {
-                    backgroundDisclosure = false; walkAll = false; bootAfter = false; fromUser = false
+                    backgroundDisclosure = false; bootAfter = false; declined(Perm.BACKGROUND)
                 }) { Text("Not now") } },
             )
         }
@@ -578,44 +605,89 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        if (batteryPrompt && !walkAll && !startAfter && !locationDisclosure && !backgroundDisclosure &&
-            pending == null && pinAction == null) {
+        special?.let { p ->
+            val skip = { special = null; skipped += p; advance() }
             AlertDialog(
-                onDismissRequest = { batteryPrompt = false },
-                title = { Text("Keep TAK Beacon running") },
-                text = {
-                    Text(
-                        "Android is limiting TAK Beacon's battery use, which can stop position reports while the " +
-                            "screen is off. Allow TAK Beacon to run without battery restrictions?",
-                    )
-                },
+                onDismissRequest = skip,
+                title = { Text(specialTitle(p)) },
+                text = { Text(specialText(p)) },
                 confirmButton = {
                     TextButton(onClick = {
-                        batteryPrompt = false
-                        requestBatteryExemption()
-                    }) { Text("Allow") }
+                        special = null
+                        awaiting = p
+                        if (!openSpecial(p)) { awaiting = null; skipped += p; advance() }
+                    }) { Text(if (p == Perm.BATTERY) "Allow" else "Open settings") }
                 },
-                dismissButton = { TextButton(onClick = { batteryPrompt = false }) { Text("Not now") } },
+                dismissButton = { TextButton(onClick = skip) { Text("Not now") } },
             )
         }
     }
 
-    /** Across the top of the Beacon screen while a permission is missing; tap to ask again. */
+    private fun specialTitle(p: Perm) = when (p) {
+        Perm.BATTERY -> "Keep TAK Beacon running"
+        Perm.OVERLAY -> "Show priority alerts over other apps"
+        Perm.FULL_SCREEN -> "Show priority alerts full screen"
+        Perm.DND -> "Let priority alerts through Do Not Disturb"
+        else -> p.label
+    }
+
+    private fun specialText(p: Perm) = when (p) {
+        Perm.BATTERY -> "Android is limiting TAK Beacon's battery use, which can stop position reports while the screen " +
+            "is off. Allow TAK Beacon to run without battery restrictions?"
+        Perm.OVERLAY -> "So a priority alert can open in front of the app you are using. On the next screen, tap " +
+            "TAK Beacon and turn on \"Allow display over other apps\"."
+        Perm.FULL_SCREEN -> "So a priority alert can wake the phone and fill the screen when it is locked. On the next " +
+            "screen, turn on full-screen notifications for TAK Beacon."
+        Perm.DND -> "So a priority alert can sound when Do Not Disturb would silence alarms. TAK Beacon lifts Do Not " +
+            "Disturb only while an alert sounds, then restores it. On the next screen, tap TAK Beacon and allow access."
+        else -> p.effect
+    }
+
+    /** Opens the settings page (or Android's prompt) for a special permission; false if there is none. */
+    private fun openSpecial(p: Perm): Boolean {
+        val pkg = Uri.parse("package:$packageName")
+        val intent = when (p) {
+            Perm.BATTERY -> { requestBatteryExemption(); return true }
+            Perm.OVERLAY -> Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, pkg)
+            Perm.FULL_SCREEN -> if (Build.VERSION.SDK_INT >= 34) Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, pkg) else return false
+            Perm.DND -> Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
+            else -> return false
+        }
+        return runCatching { startActivity(intent) }.isSuccess
+    }
+
+    /** Across the top of the Beacon screen while anything is missing: what, what it breaks, and a Grant button. */
     @Composable
     private fun PermissionBanner(missing: List<Perm>, onClick: () -> Unit) {
-        Row(
+        val on = MaterialTheme.colorScheme.onErrorContainer
+        Column(
             Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.errorContainer).clickable(onClick = onClick)
-                .padding(horizontal = 16.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
+                .padding(horizontal = 16.dp, vertical = 12.dp),
         ) {
-            Icon(Icons.Outlined.WarningAmber, null, tint = MaterialTheme.colorScheme.onErrorContainer)
-            Spacer(Modifier.width(10.dp))
-            Column(Modifier.weight(1f)) {
-                Text("Missing permissions", style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onErrorContainer)
-                Text(missing.joinToString { it.label } + ". Tap to grant.", style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onErrorContainer)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Outlined.WarningAmber, null, tint = MaterialTheme.colorScheme.error)
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    if (missing.size == 1) "A permission is missing" else "${missing.size} permissions are missing",
+                    style = MaterialTheme.typography.titleMedium, color = on,
+                )
             }
+            Text(if (missing.size == 1) "TAK Beacon won't work fully until it is granted:" else "TAK Beacon won't work fully until they are granted:", style = MaterialTheme.typography.bodySmall,
+                color = on, modifier = Modifier.padding(top = 4.dp))
+            missing.forEach { p ->
+                Text(
+                    buildAnnotatedString {
+                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("\u2022 ${p.label}: ") }
+                        append(p.effect)
+                    },
+                    style = MaterialTheme.typography.bodySmall, color = on, modifier = Modifier.padding(top = 4.dp),
+                )
+            }
+            androidx.compose.material3.Button(
+                onClick = onClick,
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                modifier = Modifier.padding(top = 10.dp),
+            ) { Text("Grant permissions") }
         }
     }
 

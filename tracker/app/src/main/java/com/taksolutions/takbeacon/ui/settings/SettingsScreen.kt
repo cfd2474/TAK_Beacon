@@ -103,8 +103,8 @@ fun SettingsScreen(
             // Not a setting: works while locked, so a locked beacon can still be fixed.
             Section("Permissions") {
                 Text(
-                    "Missing: ${missingPermissions.joinToString()}. TAK Beacon needs these to keep reporting " +
-                        "with the screen off, after a restart and when ATAK starts it.",
+                    "Missing: ${missingPermissions.joinToString()}. Some features won't work until they are " +
+                        "granted (see the Beacon screen).",
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error,
                 )
                 Spacer(Modifier.height(8.dp))

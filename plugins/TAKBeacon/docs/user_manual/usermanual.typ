@@ -244,7 +244,9 @@ Tap *Locked \u{00B7} tap to unlock* and enter the PIN to make changes. Change or
 #tak-slide[
 = Missing permissions
 #toolbox.side-by-side(columns: (6fr, 3fr, 3fr))[
-If a permission TAK Beacon needs is turned off later, a red *Missing permissions* banner shows across the top of the Beacon screen, and *Settings, Permissions* shows a *Grant permissions* button. Tap either to be asked again.
+Every time TAK Beacon opens it asks for anything it needs that is missing: location (all the time), notifications, unrestricted battery and, for priority alerts, display over other apps, full-screen alerts and Do Not Disturb access (these open an Android settings page: tap TAK Beacon, turn it on, go back). *Not now* skips one until next time.
+
+While anything is missing, a red banner across the top of the Beacon screen lists it and what doesn't work without it, with a *Grant permissions* button (also in *Settings, Permissions*).
 
 If Android no longer shows the prompt (it was refused twice), TAK Beacon opens its Android settings page instead: open *Permissions* and allow *Location: All the time* and *Notifications* there.
 
@@ -263,7 +265,7 @@ If Android no longer shows the prompt (it was refused twice), TAK Beacon opens i
 - *Reports stop with the screen off*: allow location *All the time*, and set TAK Beacon's battery use to *Unrestricted* (*Settings, Startup and battery*).
 - *Start or Stop does nothing*: TAK Beacon is locked; unlock it with its PIN.
 - *Waiting for GPS*: TAK Beacon needs a location fix before it reports; check that location is on.
-- *Red Missing permissions banner*: tap it and allow what it lists.
+- *Red missing-permissions banner*: tap it and allow what it lists.
 ]
 
 #tak-slide[

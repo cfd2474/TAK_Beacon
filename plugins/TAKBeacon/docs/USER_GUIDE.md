@@ -249,18 +249,28 @@ to someone, for example):
 
 ## 9. Permissions, battery and starting automatically
 
-- The first time TAK Beacon opens, it asks for precise location,
-  notifications, and then location **"Allow all the time"** (Android shows a
-  settings screen for that one: choose *Allow all the time*). These keep the
-  beacon reporting with the screen off, after a restart and when ATAK starts it.
-- If any of them is missing later, a red **Missing permissions** banner
-  appears across the top of the Beacon screen, and **Settings → Permissions**
-  shows a **Grant permissions** button. Tap either to be asked again. If
-  Android no longer shows the prompt (it was refused twice), TAK Beacon opens
-  its Android settings page instead: open *Permissions* and allow them there.
-- When TAK Beacon opens and Android is still restricting its battery use, it
-  asks you to allow it to run unrestricted. Allow it: otherwise Android can stop
-  reports while the screen is off.
+- Every time TAK Beacon opens, it checks everything it needs and asks for
+  whatever is missing, one at a time:
+  - precise location, notifications, and location **"Allow all the time"**
+    (Android shows a settings screen for that one: choose *Allow all the
+    time*), which keep the beacon reporting with the screen off, after a
+    restart and when ATAK starts it;
+  - **unrestricted battery**, so Android doesn't stop reports while the screen
+    is off;
+  - for priority alerts: **display over other apps**, **full-screen alerts**
+    (Android 14 and later) and **Do Not Disturb access**. These three are
+    switched on in an Android settings page that TAK Beacon opens: tap TAK
+    Beacon in the list and turn it on, then go back. They aren't asked for
+    when your organization has turned chat off.
+
+  **Not now** skips one; you're asked again next time. (It doesn't ask when
+  ATAK opens TAK Beacon just to start the beacon.)
+- While anything is missing, a red banner across the top of the Beacon screen
+  lists each missing permission and what doesn't work without it, with a
+  **Grant permissions** button; **Settings → Permissions** has the same
+  button. If Android no longer shows a prompt (it was refused twice), TAK
+  Beacon opens its Android settings page instead: open *Permissions* and allow
+  it there.
 - **Settings → Startup & battery → Start on boot** starts the beacon whenever
   the phone starts *and* whenever the app is opened. It needs location access
   "Allow all the time".
@@ -279,7 +289,7 @@ to someone, for example):
   battery restrictions (it asks when opened; or **Settings → Startup &
   battery**).
 - **Start/Stop does nothing** — TAK Beacon is locked; unlock it with its PIN.
-- **Red "Missing permissions" banner** — tap it and allow what it lists,
+- **Red missing-permissions banner** — tap it and allow what it lists,
   choosing location "Allow all the time".
 - **"Waiting for GPS"** — TAK Beacon needs a location fix before it reports;
   check that location is on.
