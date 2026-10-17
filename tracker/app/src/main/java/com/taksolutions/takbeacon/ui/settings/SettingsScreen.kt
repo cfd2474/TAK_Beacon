@@ -337,7 +337,7 @@ fun SettingsScreen(
                 Text(
                     (if (mKeywords) "Set by your organization. " else "") +
                         "A message containing one of these words or phrases sounds an alarm at full volume, even on silent, " +
-                        "until you acknowledge it (at most 2 minutes). Separate them with commas. Not while paused for ATAK.",
+                        "until you acknowledge it (at most 2 minutes). Separate them with commas.",
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 var keywords by remember(s.alertKeywords) { mutableStateOf(s.alertKeywords.joinToString(", ")) }
@@ -355,6 +355,12 @@ fun SettingsScreen(
                     ) { Text("Save keywords") }
                     TextButton(onClick = onTestAlert) { Text("Test alert") }
                 }
+                ToggleRow(
+                    "Alert while paused for ATAK",
+                    "Also sound priority alerts while the beacon is paused because ATAK is running. " +
+                        "ATAK shows the message too, but it has no keyword alarm.",
+                    s.alertWhilePausedForAtak, enabled = !s.locked,
+                ) { v -> onChange { it.copy(alertWhilePausedForAtak = v) } }
                 if (!dndAccess) {
                     Text(
                         "To sound even when Do Not Disturb silences alarms, allow TAK Beacon to override Do Not Disturb.",

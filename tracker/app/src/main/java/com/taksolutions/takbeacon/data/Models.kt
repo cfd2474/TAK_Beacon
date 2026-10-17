@@ -128,6 +128,8 @@ data class BeaconSettings(
     val reportingMode: ReportingMode = ReportingMode.FIXED,
     /** Words or phrases that turn an incoming message into a priority alert (chat/KeywordAlert). */
     val alertKeywords: List<String> = emptyList(),
+    /** Priority alerts also sound while the beacon is paused because ATAK is running (normally silent then). */
+    val alertWhilePausedForAtak: Boolean = false,
 ) {
     val hasPin: Boolean get() = pinHash != null && pinSalt != null
 

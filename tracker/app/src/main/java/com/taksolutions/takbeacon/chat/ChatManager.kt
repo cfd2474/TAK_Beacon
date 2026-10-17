@@ -93,9 +93,10 @@ class ChatManager(private val app: BeaconApp) {
             app.connections.sendChat(GeoChat.receipt(me(s), m.messageId, read = false, m.senderUid, m.senderCallsign), serverId)
         }
         // A priority keyword sounds the alarm, from any room (even with group notifications off),
-        // but not while paused for ATAK, and not for an old message delivered late.
+        // but not while paused for ATAK (unless the user turned that on), and not for an old
+        // message delivered late.
         val keyword = KeywordAlert.match(m.text, s.alertKeywords)?.takeIf {
-            BeaconStatus.state.value.runState != RunState.PAUSED_FOR_ATAK &&
+            (s.alertWhilePausedForAtak || BeaconStatus.state.value.runState != RunState.PAUSED_FOR_ATAK) &&
                 System.currentTimeMillis() - msg.timeMs < PriorityAlert.MAX_AGE_MS
         }
         // The alert notification carries this message; a chat notification beside it would bury it.

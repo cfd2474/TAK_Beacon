@@ -226,8 +226,9 @@ Do Not Disturb normally lets alarms through. If yours silences alarms, tap
 Disturb while the alarm sounds and restores it after. **Test alert** tries it.
 
 Keywords are checked in every received chat (direct, All Chat Rooms, team),
-even with group notifications off. No alert sounds while the beacon is paused
-for ATAK, or for a message more than 15 minutes old. Your organization can set
+even with group notifications off. No alert sounds for a message more than 15
+minutes old, or while the beacon is paused for ATAK unless you turn on **Alert
+while paused for ATAK** (off by default). Your organization can set
 the keywords; they are then read only.
 
 ## 8. Lock with a PIN

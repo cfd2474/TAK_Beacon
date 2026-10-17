@@ -215,7 +215,7 @@ While the beacon is on and connected, TAK Beacon receives TAK chat sent to you, 
 - Reply in the conversation, with the quick replies, or from the notification's *Reply*. Post to All Chat Rooms or your team room from their conversations.
 - Senders see when you received and read their direct messages (*Settings, Messages* turns this off).
 - Locked: read only. Paused for ATAK: messages are saved silently, since ATAK shows them.
-- *Priority alerts* (Settings, Messages): enter keywords separated by commas and tap *Save keywords*. A received message containing one sounds an alarm at full volume, even on silent, for 2 minutes or until you tap *Acknowledge* in the notification or in the app. To sound through a Do Not Disturb that silences alarms, tap *Allow through Do Not Disturb*. *Test alert* tries it. Not while paused for ATAK.
+- *Priority alerts* (Settings, Messages): enter keywords separated by commas and tap *Save keywords*. A received message containing one sounds an alarm at full volume, even on silent, for 2 minutes or until you tap *Acknowledge* in the notification or in the app. To sound through a Do Not Disturb that silences alarms, tap *Allow through Do Not Disturb*. *Test alert* tries it. While the beacon is paused for ATAK it stays silent unless *Alert while paused for ATAK* is on (off by default).
 - The alert fills the screen, over the lock screen and over other apps, when allowed: tap *Allow full screen on lock screen* and *Allow over other apps* if Settings shows them. Otherwise it is a notification.
 ][
 #phone("screens/app_messages_thread.jpg")
