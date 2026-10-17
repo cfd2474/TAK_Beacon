@@ -195,6 +195,31 @@ sent to you, to **All Chat Rooms** and to your team's room. Each one notifies
 
 Messages are kept on the phone, encrypted, for up to 30 days (500 at most).
 
+### Priority alerts
+
+In **Settings → Messages → Priority alerts**, enter words or phrases separated
+by commas (for example *mayday, evacuate, shots fired*) and tap **Save
+keywords**. When a received message contains one, as a whole word and
+ignoring case, TAK Beacon goes into alert mode:
+
+- An alarm sounds at full volume, even with the phone on silent or vibrate,
+  for 2 minutes or until you acknowledge it, whichever comes first. The phone
+  vibrates too.
+- A priority notification shows the message with an **Acknowledge** button.
+  It stays until acknowledged: swiping it away brings it back. Opening TAK
+  Beacon shows the alert until you tap **Acknowledge**, which also opens the
+  conversation. You can acknowledge while TAK Beacon is locked.
+- Afterwards the alarm volume goes back to what it was.
+
+Do Not Disturb normally lets alarms through. If yours silences alarms, tap
+**Allow through Do Not Disturb** and allow TAK Beacon: it then lifts Do Not
+Disturb while the alarm sounds and restores it after. **Test alert** tries it.
+
+Keywords are checked in every received chat (direct, All Chat Rooms, team),
+even with group notifications off. No alert sounds while the beacon is paused
+for ATAK, or for a message more than 15 minutes old. Your organization can set
+the keywords; they are then read only.
+
 ## 8. Lock with a PIN
 
 Use the lock to keep a configured beacon exactly as it is (on a tracker issued

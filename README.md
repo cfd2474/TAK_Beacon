@@ -55,6 +55,8 @@ installs and drives it.
 - **TAK chat:** receives direct, All Chat Rooms and team messages while the
   beacon is connected, with notifications, quick and inline replies, and
   delivered/read receipts; read only while locked.
+- **Priority alerts:** keywords you choose turn a matching message into an
+  alarm at full volume (even on silent) until acknowledged, up to 2 minutes.
 - **Map symbol** (CoT type: ground unit, vehicle, aircraft, boat) and UDP
   broadcast **only when no server is connected**.
 - **MDM managed configuration** ([docs/mdm-managed-config.md](docs/mdm-managed-config.md)):

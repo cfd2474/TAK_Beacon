@@ -17,6 +17,8 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Priority alerts: lift Do Not Disturb while the alarm sounds, only if the user allows it. -->
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
     <!-- Lets the launch prompt open Android's "allow unrestricted battery" dialog
          directly: a beacon that Doze silences has failed at its one job. -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
@@ -116,6 +118,10 @@
 
         <receiver
             android:name=".chat.ChatReplyReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".chat.PriorityAlertReceiver"
             android:exported="false" />
 
         <receiver

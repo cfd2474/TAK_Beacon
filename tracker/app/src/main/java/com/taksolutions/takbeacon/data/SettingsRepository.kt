@@ -50,6 +50,7 @@ class SettingsRepository(private val context: Context) {
         val CHAT_RECEIPTS = booleanPreferencesKey("chat_receipts")
         val CHAT_GROUP_NOTIFY = booleanPreferencesKey("chat_group_notify")
         val REPORTING_MODE = stringPreferencesKey("reporting_mode")
+        val ALERT_KEYWORDS = stringPreferencesKey("alert_keywords")
     }
 
     val settings: Flow<BeaconSettings> = context.settingsStore.data.map(::settingsFrom)
@@ -106,6 +107,7 @@ class SettingsRepository(private val context: Context) {
             p[K.CHAT_RECEIPTS] = n.chatReceipts
             p[K.CHAT_GROUP_NOTIFY] = n.chatGroupNotify
             p[K.REPORTING_MODE] = n.reportingMode.name
+            p[K.ALERT_KEYWORDS] = n.alertKeywords.joinToString("\n")
         }
     }
 
@@ -141,6 +143,7 @@ class SettingsRepository(private val context: Context) {
         chatReceipts = p[K.CHAT_RECEIPTS] ?: true,
         chatGroupNotify = p[K.CHAT_GROUP_NOTIFY] ?: true,
         reportingMode = p[K.REPORTING_MODE]?.let { runCatching { ReportingMode.valueOf(it) }.getOrNull() } ?: ReportingMode.FIXED,
+        alertKeywords = p[K.ALERT_KEYWORDS]?.let(com.taksolutions.takbeacon.chat.KeywordAlert::parse) ?: emptyList(),
     )
 
     companion object {

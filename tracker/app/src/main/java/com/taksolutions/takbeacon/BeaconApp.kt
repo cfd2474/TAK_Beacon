@@ -9,6 +9,7 @@ import com.taksolutions.takbeacon.data.SettingsRepository
 import com.taksolutions.takbeacon.enroll.DataPackageImporter
 import com.taksolutions.takbeacon.enroll.EnrollmentClient
 import com.taksolutions.takbeacon.chat.ChatManager
+import com.taksolutions.takbeacon.chat.PriorityAlert
 import com.taksolutions.takbeacon.mdm.ManagedConfigManager
 import com.taksolutions.takbeacon.net.ConnectionManager
 import com.taksolutions.takbeacon.security.CertStore
@@ -37,6 +38,8 @@ class BeaconApp : Application() {
     lateinit var managed: ManagedConfigManager
         private set
     lateinit var chat: ChatManager
+        private set
+    lateinit var alerts: PriorityAlert
         private set
 
     val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -72,6 +75,7 @@ class BeaconApp : Application() {
             settings.settings.collect { uid = it.uid; trustedAtakSigner = it.trustedAtakSigner; locked = it.locked; wasRunning = it.wasRunning }
         }
         createChannels()
+        alerts = PriorityAlert(this)
         chat = ChatManager(this)
         chat.start()
         managed = ManagedConfigManager(this)
@@ -92,12 +96,22 @@ class BeaconApp : Application() {
             NotificationChannel(CHANNEL_MESSAGES, getString(R.string.channel_messages), NotificationManager.IMPORTANCE_HIGH)
                 .apply { lockscreenVisibility = android.app.Notification.VISIBILITY_PRIVATE }
         )
+        // Keyword alerts: the app plays the alarm itself (on the alarm stream), so the channel is silent.
+        nm.createNotificationChannel(
+            NotificationChannel(CHANNEL_PRIORITY, getString(R.string.channel_priority), NotificationManager.IMPORTANCE_HIGH).apply {
+                setSound(null, null)
+                enableVibration(false)
+                setBypassDnd(true)
+                lockscreenVisibility = android.app.Notification.VISIBILITY_PRIVATE
+            }
+        )
     }
 
     companion object {
         const val CHANNEL_TRACKING = "tracking"
         const val CHANNEL_ALERTS = "alerts"
         const val CHANNEL_MESSAGES = "messages"
+        const val CHANNEL_PRIORITY = "priority_alerts"
 
         fun from(context: Context) = context.applicationContext as BeaconApp
     }

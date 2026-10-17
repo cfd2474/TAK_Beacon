@@ -126,6 +126,8 @@ data class BeaconSettings(
     val chatGroupNotify: Boolean = true,
     /** Fixed interval, or Adaptive (follows movement). */
     val reportingMode: ReportingMode = ReportingMode.FIXED,
+    /** Words or phrases that turn an incoming message into a priority alert (chat/KeywordAlert). */
+    val alertKeywords: List<String> = emptyList(),
 ) {
     val hasPin: Boolean get() = pinHash != null && pinSalt != null
 
