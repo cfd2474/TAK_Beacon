@@ -92,6 +92,11 @@ dependencies {
     implementation(libs.camera.camera2)
     implementation(libs.camera.lifecycle)
     implementation(libs.camera.view)
+    constraints {
+        // camera-view pulls appcompat 1.1.0 and with it fragment 1.1.0, which Play flags as outdated.
+        implementation(libs.androidx.appcompat) { because("raise camera-view's transitive appcompat") }
+        implementation(libs.androidx.fragment) { because("raise camera-view's transitive fragment 1.1.0") }
+    }
     implementation(libs.zxing.core)
     implementation(libs.bouncycastle.pkix)
     implementation(libs.osmdroid)
