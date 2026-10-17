@@ -6,5 +6,4 @@
     <string name="notif_stop">Stop</string>
     <string name="notif_resume">Resume</string>
     <string name="channel_messages">Messages</string>
-    <string name="channel_priority">Priority alerts</string>
 </resources>

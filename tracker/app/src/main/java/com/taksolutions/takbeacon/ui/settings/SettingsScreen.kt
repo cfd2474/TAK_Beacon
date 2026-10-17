@@ -75,10 +75,6 @@ fun SettingsScreen(
     managedFields: Set<String> = emptySet(),
     managedByOrg: Boolean = false,
     onClearMessages: () -> Unit = {},
-    onTestAlert: () -> Unit = {},
-    /** TAK Beacon may lift Do Not Disturb for a priority alert. */
-    dndAccess: Boolean = true,
-    onDndAccess: () -> Unit = {},
 ) {
     val mCallsign = "callsign" in managedFields
     val mTeam = "team" in managedFields
@@ -86,7 +82,6 @@ fun SettingsScreen(
     val mBoot = "start_on_boot" in managedFields
     val mCot = "cot_type" in managedFields
     val mMode = "reporting_mode" in managedFields
-    val mKeywords = "alert_keywords" in managedFields
     val adaptive = s.reportingMode == com.taksolutions.takbeacon.data.ReportingMode.ADAPTIVE
     CompositionLocalProvider(LocalSettingsLocked provides s.locked) {
     Column(
@@ -326,38 +321,6 @@ fun SettingsScreen(
                 ToggleRow("Send read receipts", "Let senders see when a direct message was delivered and read.",
                     s.chatReceipts) { v -> onChange { it.copy(chatReceipts = v) } }
                 TextButton(enabled = !s.locked, onClick = onClearMessages) { Text("Clear messages on this device") }
-
-                Spacer(Modifier.height(12.dp))
-                Text("Priority alerts", style = MaterialTheme.typography.labelLarge)
-                Text(
-                    (if (mKeywords) "Set by your organization. " else "") +
-                        "A message containing one of these words or phrases sounds an alarm at full volume, even on silent, " +
-                        "until you acknowledge it (at most 2 minutes). Separate them with commas. Not while paused for ATAK.",
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                var keywords by remember(s.alertKeywords) { mutableStateOf(s.alertKeywords.joinToString(", ")) }
-                val parsed = com.taksolutions.takbeacon.chat.KeywordAlert.parse(keywords)
-                OutlinedTextField(
-                    keywords, { keywords = it.take(2_000) },
-                    label = { Text("Keywords") }, placeholder = { Text("e.g. mayday, evacuate, shots fired") },
-                    enabled = !s.locked && !mKeywords, minLines = 2,
-                    modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 6.dp)) {
-                    OutlinedButton(
-                        enabled = !s.locked && !mKeywords && parsed != s.alertKeywords,
-                        onClick = { onChange { it.copy(alertKeywords = parsed) } },
-                    ) { Text("Save keywords") }
-                    TextButton(onClick = onTestAlert) { Text("Test alert") }
-                }
-                if (!dndAccess) {
-                    Text(
-                        "To sound even when Do Not Disturb silences alarms, allow TAK Beacon to override Do Not Disturb.",
-                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 6.dp),
-                    )
-                    OutlinedButton(onClick = onDndAccess, modifier = Modifier.padding(top = 6.dp)) { Text("Allow through Do Not Disturb") }
-                }
             }
         }
 

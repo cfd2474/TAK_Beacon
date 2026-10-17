@@ -137,12 +137,6 @@
         android:description="@string/mdm_reporting_desc" />
 
     <restriction
-        android:key="alert_keywords"
-        android:restrictionType="string"
-        android:title="@string/mdm_alert_keywords_title"
-        android:description="@string/mdm_alert_keywords_desc" />
-
-    <restriction
         android:key="start_beacon"
         android:restrictionType="bool"
         android:defaultValue="false"

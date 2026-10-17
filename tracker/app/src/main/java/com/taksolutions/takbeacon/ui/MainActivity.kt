@@ -96,8 +96,6 @@ class MainActivity : ComponentActivity() {
 
     /** Runtime permissions not granted yet; refreshed on every resume. */
     private var missing by mutableStateOf(emptyList<Perm>())
-    /** Priority alerts may lift Do Not Disturb; refreshed on every resume. */
-    private var dndAccess by mutableStateOf(true)
 
     /** Set when the ATAK plugin opened us only to start tracking; we step back to ATAK after. */
     private var startRequestedByPlugin by mutableStateOf(false)
@@ -146,7 +144,6 @@ class MainActivity : ComponentActivity() {
 
     private fun refreshPermissions() {
         missing = Perm.missing(this)
-        dndAccess = getSystemService(android.app.NotificationManager::class.java).isNotificationPolicyAccessGranted
     }
 
     /** For a permission Android will no longer prompt for (denied twice): its own settings page. */
@@ -427,42 +424,11 @@ class MainActivity : ComponentActivity() {
                     managedFields = managed.fields,
                     managedByOrg = managed.managed,
                     onClearMessages = { chat.clear(); vm.toast("Messages cleared") },
-                    onTestAlert = { BeaconApp.from(this).alerts.trigger("test", "TAK Beacon", "This is a test of the priority alert.", null) },
-                    dndAccess = dndAccess,
-                    onDndAccess = { runCatching { startActivity(Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)) } },
                 )
             }
         }
 
         // --- dialogs --------------------------------------------------------------------
-        val alert by BeaconApp.from(this).alerts.state.collectAsStateWithLifecycle()
-        alert?.let { a ->
-            // Priority alert: only Acknowledge closes it (it is allowed while PIN-locked).
-            AlertDialog(
-                onDismissRequest = {},
-                properties = androidx.compose.ui.window.DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
-                containerColor = MaterialTheme.colorScheme.errorContainer,
-                title = { Text("Priority alert: ${a.keyword}", color = MaterialTheme.colorScheme.onErrorContainer) },
-                text = {
-                    Column {
-                        Text(a.fromCallsign, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onErrorContainer)
-                        Text(a.text, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onErrorContainer,
-                            modifier = Modifier.padding(top = 4.dp))
-                        if (!a.sounding) Text("Alarm stopped after 2 minutes.", style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onErrorContainer, modifier = Modifier.padding(top = 8.dp))
-                    }
-                },
-                confirmButton = {
-                    androidx.compose.material3.Button(
-                        onClick = {
-                            BeaconApp.from(this).alerts.acknowledge()
-                            a.threadKey?.let { tab = 3; openThread = it }
-                        },
-                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                    ) { Text("Acknowledge") }
-                },
-            )
-        }
         if (scanning) {
             QrScannerDialog(
                 onResult = { text ->
