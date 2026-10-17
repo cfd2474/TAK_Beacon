@@ -36,6 +36,7 @@ the user's own setting.
 | `cot_type` | string | `a-f-G-U-C` | Map symbol (CoT type) of position reports, e.g. `a-f-G-E-V-C` for a vehicle (1.3.4+). |
 | `reporting_mode` | choice `fixed`/`adaptive` | `fixed` | Fixed interval, or Adaptive: by movement, 3 min still to 5 s fast (1.4.1+). |
 | `messaging` | choice `full`/`read_only`/`off` | `full` | TAK chat: receive and reply, receive only, or off (1.3.5+). |
+| `alert_keywords` | string | (none) | Priority-alert keywords, comma separated (up to 50). A received chat containing one sounds an alarm at full volume until acknowledged, at most 2 minutes. Replaces the user's list, which becomes read only (1.4.2+). |
 | `start_beacon` | bool | false | Turn the beacon on when the configuration arrives and at every boot. The user can still stop it. |
 
 Keys holding secrets contain "password", so consoles that mask such keys (ATLAS

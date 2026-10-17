@@ -39,6 +39,8 @@
     <string name="mdm_messaging_desc">Receive and reply to TAK chat (full), receive only (read only), or turn chat off. Set here, the user cannot change it.</string>
     <string name="mdm_reporting_title">Reporting mode</string>
     <string name="mdm_reporting_desc">Fixed: the interval set on the device. Adaptive: by movement (3 min still, 30 s walking, 10 s driving, 5 s fast). Set here, the user cannot change it.</string>
+    <string name="mdm_alert_keywords_title">Priority alert keywords</string>
+    <string name="mdm_alert_keywords_desc">Comma-separated words or phrases. A received message containing one sounds an alarm at full volume until acknowledged (up to 2 minutes). Set here, the user cannot change the list.</string>
     <string name="mdm_start_beacon_title">Start the beacon</string>
     <string name="mdm_start_beacon_desc">Turn the beacon on when this configuration arrives and whenever the device starts. The user can still stop it.</string>
 

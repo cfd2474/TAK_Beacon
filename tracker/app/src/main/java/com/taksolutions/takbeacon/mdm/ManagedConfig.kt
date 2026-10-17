@@ -39,6 +39,8 @@ data class ManagedConfig(
     val messaging: com.taksolutions.takbeacon.data.MessagingMode? = null,
     /** Fixed or Adaptive reporting. */
     val reportingMode: com.taksolutions.takbeacon.data.ReportingMode? = null,
+    /** Priority-alert keywords (replaces the user's list). */
+    val alertKeywords: List<String>? = null,
     /** Turn the beacon on when the config arrives and on every boot (the user can still stop it). */
     val startBeacon: Boolean = false,
 ) {
@@ -55,6 +57,7 @@ data class ManagedConfig(
             if (cotType != null) add(FIELD_COT_TYPE)
             if (messaging != null) add(FIELD_MESSAGING)
             if (reportingMode != null) add(FIELD_REPORTING_MODE)
+            if (alertKeywords != null) add(FIELD_ALERT_KEYWORDS)
             if (startBeacon) add(FIELD_START_ON_BOOT)
         }
 
@@ -84,6 +87,7 @@ data class ManagedConfig(
         const val FIELD_COT_TYPE = "cot_type"
         const val FIELD_MESSAGING = "messaging"
         const val FIELD_REPORTING_MODE = "reporting_mode"
+        const val FIELD_ALERT_KEYWORDS = "alert_keywords"
 
         // Restriction keys (res/xml/app_restrictions.xml). Secrets contain "password"
         // so MDM consoles mask them.
@@ -107,6 +111,7 @@ data class ManagedConfig(
         const val K_COT_TYPE = "cot_type"
         const val K_MESSAGING = "messaging"
         const val K_REPORTING_MODE = "reporting_mode"
+        const val K_ALERT_KEYWORDS = "alert_keywords"
 
         /**
          * Reads a restrictions bundle flattened to a map. Returns null when nothing usable
@@ -159,6 +164,7 @@ data class ManagedConfig(
                     "fixed" -> com.taksolutions.takbeacon.data.ReportingMode.FIXED
                     else -> null
                 },
+                alertKeywords = str(K_ALERT_KEYWORDS)?.let(com.taksolutions.takbeacon.chat.KeywordAlert::parse)?.takeIf { it.isNotEmpty() },
             )
             return c.takeIf { it.hasServer || it.managedFields.isNotEmpty() || it.version != null }
         }
