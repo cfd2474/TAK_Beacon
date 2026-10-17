@@ -142,6 +142,13 @@
         android:title="@string/mdm_alert_keywords_title"
         android:description="@string/mdm_alert_keywords_desc" />
 
+    <!-- No defaultValue: unset leaves it to the user (some MDMs send every default). -->
+    <restriction
+        android:key="alert_while_paused_for_atak"
+        android:restrictionType="bool"
+        android:title="@string/mdm_alert_while_atak_title"
+        android:description="@string/mdm_alert_while_atak_desc" />
+
     <restriction
         android:key="start_beacon"
         android:restrictionType="bool"

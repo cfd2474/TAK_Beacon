@@ -92,6 +92,7 @@ fun SettingsScreen(
     val mCot = "cot_type" in managedFields
     val mMode = "reporting_mode" in managedFields
     val mKeywords = "alert_keywords" in managedFields
+    val mAlertAtak = "alert_while_paused_for_atak" in managedFields
     val adaptive = s.reportingMode == com.taksolutions.takbeacon.data.ReportingMode.ADAPTIVE
     CompositionLocalProvider(LocalSettingsLocked provides s.locked) {
     Column(
@@ -357,9 +358,10 @@ fun SettingsScreen(
                 }
                 ToggleRow(
                     "Alert while paused for ATAK",
-                    "Also sound priority alerts while the beacon is paused because ATAK is running. " +
+                    (if (mAlertAtak) "Set by your organization. " else "") +
+                        "Also sound priority alerts while the beacon is paused because ATAK is running. " +
                         "ATAK shows the message too, but it has no keyword alarm.",
-                    s.alertWhilePausedForAtak, enabled = !s.locked,
+                    s.alertWhilePausedForAtak, enabled = !s.locked && !mAlertAtak,
                 ) { v -> onChange { it.copy(alertWhilePausedForAtak = v) } }
                 if (!dndAccess) {
                     Text(

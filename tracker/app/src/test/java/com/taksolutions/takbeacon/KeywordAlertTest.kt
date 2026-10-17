@@ -40,4 +40,14 @@ class KeywordAlertTest {
         // An empty list isn't a managed setting.
         assertNull(ManagedConfig.parse(mapOf("alert_keywords" to " , ")) { null })
     }
+
+    @Test fun mdmAlertWhilePausedForAtak() {
+        val on = ManagedConfig.parse(mapOf("alert_while_paused_for_atak" to true)) { null }!!
+        assertEquals(true, on.alertWhilePausedForAtak)
+        assertTrue(ManagedConfig.FIELD_ALERT_WHILE_ATAK in on.managedFields)
+        assertEquals(false, ManagedConfig.parse(mapOf("alert_while_paused_for_atak" to "false")) { null }!!.alertWhilePausedForAtak)
+        // Unset: the user decides, and on its own it doesn't make the device managed.
+        assertNull(ManagedConfig.parse(mapOf("alert_keywords" to "mayday")) { null }!!.alertWhilePausedForAtak)
+        assertNull(ManagedConfig.parse(mapOf("alert_while_paused_for_atak" to "maybe")) { null })
+    }
 }

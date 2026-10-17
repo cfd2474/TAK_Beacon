@@ -105,6 +105,7 @@ class ManagedConfigManager(private val app: BeaconApp) {
                 messagingMode = cfg.messaging ?: s.messagingMode,
                 reportingMode = cfg.reportingMode ?: s.reportingMode,
                 alertKeywords = cfg.alertKeywords ?: s.alertKeywords,
+                alertWhilePausedForAtak = cfg.alertWhilePausedForAtak ?: s.alertWhilePausedForAtak,
                 startOnBoot = s.startOnBoot || cfg.startBeacon,
             )
         }

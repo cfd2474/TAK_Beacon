@@ -41,6 +41,8 @@ data class ManagedConfig(
     val reportingMode: com.taksolutions.takbeacon.data.ReportingMode? = null,
     /** Priority-alert keywords (replaces the user's list). */
     val alertKeywords: List<String>? = null,
+    /** Priority alerts also sound while paused for ATAK; null when the MDM doesn't set it. */
+    val alertWhilePausedForAtak: Boolean? = null,
     /** Turn the beacon on when the config arrives and on every boot (the user can still stop it). */
     val startBeacon: Boolean = false,
 ) {
@@ -58,6 +60,7 @@ data class ManagedConfig(
             if (messaging != null) add(FIELD_MESSAGING)
             if (reportingMode != null) add(FIELD_REPORTING_MODE)
             if (alertKeywords != null) add(FIELD_ALERT_KEYWORDS)
+            if (alertWhilePausedForAtak != null) add(FIELD_ALERT_WHILE_ATAK)
             if (startBeacon) add(FIELD_START_ON_BOOT)
         }
 
@@ -88,6 +91,7 @@ data class ManagedConfig(
         const val FIELD_MESSAGING = "messaging"
         const val FIELD_REPORTING_MODE = "reporting_mode"
         const val FIELD_ALERT_KEYWORDS = "alert_keywords"
+        const val FIELD_ALERT_WHILE_ATAK = "alert_while_paused_for_atak"
 
         // Restriction keys (res/xml/app_restrictions.xml). Secrets contain "password"
         // so MDM consoles mask them.
@@ -112,6 +116,7 @@ data class ManagedConfig(
         const val K_MESSAGING = "messaging"
         const val K_REPORTING_MODE = "reporting_mode"
         const val K_ALERT_KEYWORDS = "alert_keywords"
+        const val K_ALERT_WHILE_ATAK = "alert_while_paused_for_atak"
 
         /**
          * Reads a restrictions bundle flattened to a map. Returns null when nothing usable
@@ -130,6 +135,12 @@ data class ManagedConfig(
                 is Boolean -> v
                 is String -> v.trim().equals("true", ignoreCase = true)
                 else -> false
+            }
+            /** A bool the MDM may leave unset (null), unlike [bool]. */
+            fun boolOrNull(k: String): Boolean? = when (val v = values[k]) {
+                is Boolean -> v
+                is String -> when (v.trim().lowercase()) { "true" -> true; "false" -> false; else -> null }
+                else -> null
             }
             fun bytes(k: String) = str(k)?.let { runCatching { decodeBase64(it.replace(Regex("\\s"), "")) }.getOrNull() }
                 ?.takeIf { it.isNotEmpty() }
@@ -165,6 +176,7 @@ data class ManagedConfig(
                     else -> null
                 },
                 alertKeywords = str(K_ALERT_KEYWORDS)?.let(com.taksolutions.takbeacon.chat.KeywordAlert::parse)?.takeIf { it.isNotEmpty() },
+                alertWhilePausedForAtak = boolOrNull(K_ALERT_WHILE_ATAK),
             )
             return c.takeIf { it.hasServer || it.managedFields.isNotEmpty() || it.version != null }
         }
