@@ -1,12 +1,12 @@
 # TAK Beacon
 
-**Download the TAK Beacon 1.4.1 ATAK plugin** (pick the one matching your ATAK-CIV version, sideload, then load it in ATAK's Plugins manager):
+**Download the TAK Beacon 1.4.5 ATAK plugin** (pick the one matching your ATAK-CIV version, sideload, then load it in ATAK's Plugins manager):
 
-- **ATAK-CIV 5.6:** https://github.com/cfd2474/TAK_Beacon/releases/download/v1.4.1/ATAK-Plugin-TAKBeacon-1.4.1--5.6.0-civ-release.apk
-- **ATAK-CIV 5.7:** https://github.com/cfd2474/TAK_Beacon/releases/download/v1.4.1/ATAK-Plugin-TAKBeacon-1.4.1--5.7.0-civ-release.apk
-- **ATAK-CIV 5.8:** https://github.com/cfd2474/TAK_Beacon/releases/download/v1.4.1/ATAK-Plugin-TAKBeacon-1.4.1--5.8.0-civ-release.apk
+- **ATAK-CIV 5.6:** https://github.com/cfd2474/TAK_Beacon/releases/download/v1.4.5/ATAK-Plugin-TAKBeacon-1.4.5--5.6.0-civ-release.apk
+- **ATAK-CIV 5.7:** https://github.com/cfd2474/TAK_Beacon/releases/download/v1.4.5/ATAK-Plugin-TAKBeacon-1.4.5--5.7.0-civ-release.apk
+- **ATAK-CIV 5.8:** https://github.com/cfd2474/TAK_Beacon/releases/download/v1.4.5/ATAK-Plugin-TAKBeacon-1.4.5--5.8.0-civ-release.apk
 
-**Standalone app, no ATAK:** `TAKBeacon-app-1.4.1.apk` on the [v1.4.1 release page](https://github.com/cfd2474/TAK_Beacon/releases/tag/v1.4.1) (the same Play-signed app the plugin installs; Android 8+)
+**Standalone app, no ATAK:** `TAKBeacon-app-1.4.5.apk` on the [v1.4.5 release page](https://github.com/cfd2474/TAK_Beacon/releases/tag/v1.4.5) (the same Play-signed app the plugin installs; Android 8+)
 
 All releases: https://github.com/cfd2474/TAK_Beacon/releases
 
@@ -17,8 +17,8 @@ installs and drives it.
 
 | Part | Path | Status |
 |---|---|---|
-| **TAK Beacon app** (`com.taksolutions.takbeacon`) | [tracker/](tracker/) | v1.4.1 (Play App Signing) |
-| **ATAK plugin** (`com.taksolutions.takbeacon.plugin`) | [plugins/TAKBeacon/](plugins/TAKBeacon/) | v1.4.1: signed by tak.gov for ATAK-CIV 5.6.0 / 5.7.0 / 5.8.0 |
+| **TAK Beacon app** (`com.taksolutions.takbeacon`) | [tracker/](tracker/) | v1.4.5 (Play App Signing) |
+| **ATAK plugin** (`com.taksolutions.takbeacon.plugin`) | [plugins/TAKBeacon/](plugins/TAKBeacon/) | v1.4.5: signed by tak.gov for ATAK-CIV 5.6.0 / 5.7.0 / 5.8.0 |
 | Icons | [branding/](branding/) | `python -I branding/make_icons.py` regenerates every size |
 
 ## The app
