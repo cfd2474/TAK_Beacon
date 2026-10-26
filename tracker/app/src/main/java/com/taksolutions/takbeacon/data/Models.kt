@@ -89,7 +89,7 @@ data class BeaconSettings(
     val staleSeconds: Int = 120,
     val coordFormat: CoordFormat = CoordFormat.MGRS,
     val speedUnit: SpeedUnit = SpeedUnit.KMH,
-    val startOnBoot: Boolean = false,
+    val startOnBoot: Boolean = true,
     val atakAutoPause: Boolean = true,
     val volumeSos: Boolean = false,
     val kioskLock: Boolean = false,

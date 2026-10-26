@@ -108,8 +108,12 @@ class MainActivity : ComponentActivity() {
 
     /** Set when the ATAK plugin opened us only to start tracking; we step back to ATAK after. */
     private var startRequestedByPlugin by mutableStateOf(false)
-    /** This launch came from the plugin (to start tracking): no permission walk over ATAK. */
+    /** This launch came from the plugin (to start tracking or review a server): no permission walk over ATAK. */
     private var launchedByPlugin = false
+    /** Opened to approve a server from ATAK: go back to ATAK once it is approved or rejected. */
+    private var reviewForPlugin by mutableStateOf(false)
+    /** Show the Servers tab (a server from ATAK still needs signing in). */
+    private var showServers by mutableStateOf(false)
     /** Counts resumes, so the permission walk continues after a settings page. */
     private var resumes by mutableStateOf(0)
 
@@ -155,6 +159,11 @@ class MainActivity : ComponentActivity() {
                 launchedByPlugin = true
             }
             ACTION_REVIEW_ATAK_PROFILE -> Unit // the approval dialog shows whenever a profile is pending
+            BridgeProtocol.ACTION_REVIEW_SERVER -> {
+                launchedByPlugin = true
+                if (PendingProfile.pending.value != null) reviewForPlugin = true
+                getSystemService(android.app.NotificationManager::class.java).cancel(BridgeService.APPROVAL_NOTIFICATION)
+            }
             ChatManager.ACTION_OPEN_THREAD -> openThreadRequest = intent.getStringExtra(ChatManager.EXTRA_THREAD)
         }
     }
@@ -583,6 +592,7 @@ class MainActivity : ComponentActivity() {
             )
         }
         pending?.let { p -> AtakApprovalDialog(p) }
+        LaunchedEffect(showServers) { if (showServers) { tab = 1; showServers = false } }
 
         pinAction?.let { action ->
             val close = { pinAction = null; lockAfterSet = false }
@@ -711,12 +721,22 @@ class MainActivity : ComponentActivity() {
             },
             confirmButton = {
                 TextButton(onClick = {
-                    vm.approvePendingProfile()
+                    vm.approvePendingProfile { server -> afterReview(server) }
                     getSystemService(android.app.NotificationManager::class.java).cancel(BridgeService.APPROVAL_NOTIFICATION)
                 }) { Text("Approve") }
             },
-            dismissButton = { TextButton(onClick = vm::rejectPendingProfile) { Text("Reject") } },
+            dismissButton = { TextButton(onClick = { vm.rejectPendingProfile(); afterReview(null) }) { Text("Reject") } },
         )
+    }
+
+    /**
+     * After approving or rejecting a server the plugin opened us for: back to ATAK, unless
+     * the new server still needs signing in for a certificate. Then stay, on the Servers tab.
+     */
+    private fun afterReview(server: com.taksolutions.takbeacon.data.ServerConfig?) {
+        if (!reviewForPlugin) return
+        reviewForPlugin = false
+        if (server?.needsEnrollment == true) showServers = true else moveTaskToBack(true)
     }
 
     /** Android's own "allow unrestricted battery" prompt; falls back to the settings list. */

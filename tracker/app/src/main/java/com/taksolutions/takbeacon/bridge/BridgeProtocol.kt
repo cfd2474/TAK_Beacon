@@ -12,6 +12,8 @@ object BridgeProtocol {
     const val ACTION_BIND = "com.taksolutions.takbeacon.action.BRIDGE"
     /** Activity action that starts tracking from the foreground (background FGS starts are blocked). */
     const val ACTION_START_TRACKING = "com.taksolutions.takbeacon.action.START_TRACKING"
+    /** Opened by the plugin (from ATAK, in front) when a server it sent awaits approval. */
+    const val ACTION_REVIEW_SERVER = "com.taksolutions.takbeacon.action.REVIEW_SERVER"
 
     // Plugin → app (Message.what)
     const val MSG_HELLO = 1

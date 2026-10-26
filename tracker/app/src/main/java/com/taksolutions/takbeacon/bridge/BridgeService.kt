@@ -172,6 +172,17 @@ class BridgeService : Service() {
             .setContentIntent(open)
             .build()
         runCatching { getSystemService(android.app.NotificationManager::class.java).notify(APPROVAL_NOTIFICATION, n) }
+        // The plugin opens the approval itself (from ATAK, which is in front). With "Display
+        // over other apps" allowed the app can also come forward on its own, which covers an
+        // older plugin; otherwise the notification is the way in.
+        if (android.provider.Settings.canDrawOverlays(this)) {
+            runCatching {
+                startActivity(
+                    Intent(this, MainActivity::class.java).setAction(BridgeProtocol.ACTION_REVIEW_SERVER)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                )
+            }
+        }
     }
 
     data class Caller(val packageName: String, val signerSha256: String)

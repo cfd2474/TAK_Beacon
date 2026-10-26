@@ -38,7 +38,7 @@ signer apply straight away. The user can revoke this in Settings → ATAK.
 | 3 | HEARTBEAT | `arg1` = 1 foreground / 0 leaving | none |
 | 4 | START | — | RESULT (`needs_foreground` → see below) |
 | 5 | STOP | — | RESULT |
-| 6 | PUSH_PROFILE | profile bundle | RESULT (`awaiting_approval` if not yet trusted) |
+| 6 | PUSH_PROFILE | profile bundle | RESULT (`awaiting_approval` if not yet trusted: open `action.REVIEW_SERVER`, below) |
 | 7 | EMERGENCY | `emergency` = `ALERT_911` \| `RING_THE_BELL` \| `IN_CONTACT` \| `GEO_FENCE` | RESULT |
 | 8 | CANCEL_EMERGENCY | — | RESULT |
 
@@ -65,6 +65,11 @@ mapView.getContext().startActivity(i);
 The app starts tracking, then moves itself to the back so the user is returned
 to ATAK. If location permission hasn't been granted yet, the app stays in front
 and asks for it.
+
+**Approving a server.** When PUSH_PROFILE returns `awaiting_approval`, open
+`com.taksolutions.takbeacon.action.REVIEW_SERVER` the same way (app 1.4.6+). The
+app comes to the front on its approval dialog and, once the user approves or
+rejects, moves itself to the back again.
 
 ## Profile bundle
 

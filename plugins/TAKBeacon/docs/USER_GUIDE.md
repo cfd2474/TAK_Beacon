@@ -69,9 +69,11 @@ by itself after the update, even while TAK Beacon is locked.
 2. Confirm. TAK Beacon receives the server, ATAK's certificates for it, and your
    callsign, team and role, so you appear as **one** marker whichever app is
    reporting.
-3. The first time, TAK Beacon asks you to approve: tap its notification, check
-   the request, and tap **Approve**. Approving trusts this ATAK install for later
-   updates; you can revoke it in TAK Beacon under **Settings → ATAK**.
+3. The first time, TAK Beacon opens in front of ATAK and asks you to approve:
+   check the request and tap **Approve** (or **Reject**), and you are back in
+   ATAK. Approving trusts this ATAK install for later updates; you can revoke
+   it in TAK Beacon under **Settings → ATAK**. If TAK Beacon doesn't open, tap
+   its notification instead.
 
 If ATAK has no client certificate for that server, TAK Beacon adds it and asks
 you to sign in to get its own.
@@ -272,9 +274,9 @@ to someone, for example):
   button. If Android no longer shows a prompt (it was refused twice), TAK
   Beacon opens its Android settings page instead: open *Permissions* and allow
   it there.
-- **Settings → Startup & battery → Start on boot** starts the beacon whenever
-  the phone starts *and* whenever the app is opened. It needs location access
-  "Allow all the time".
+- **Settings → Startup & battery → Start on boot** (on by default) starts the
+  beacon whenever the phone starts *and* whenever the app is opened. It needs
+  location access "Allow all the time".
 
 ## Troubleshooting
 

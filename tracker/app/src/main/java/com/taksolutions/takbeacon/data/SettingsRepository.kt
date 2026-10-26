@@ -122,7 +122,7 @@ class SettingsRepository(private val context: Context) {
         staleSeconds = p[K.STALE] ?: 120,
         coordFormat = p[K.COORD]?.let { runCatching { CoordFormat.valueOf(it) }.getOrNull() } ?: CoordFormat.MGRS,
         speedUnit = p[K.SPEED]?.let { runCatching { SpeedUnit.valueOf(it) }.getOrNull() } ?: SpeedUnit.KMH,
-        startOnBoot = p[K.BOOT] ?: false,
+        startOnBoot = p[K.BOOT] ?: true,
         atakAutoPause = p[K.ATAK_PAUSE] ?: true,
         volumeSos = p[K.VOLUME_SOS] ?: false,
         kioskLock = p[K.KIOSK] ?: false,

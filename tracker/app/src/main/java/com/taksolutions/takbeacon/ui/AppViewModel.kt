@@ -242,18 +242,20 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     // --- ATAK profile approval ------------------------------------------------
 
-    fun approvePendingProfile() {
+    /** Applies the server ATAK sent; [onDone] gets the server (null if it failed). */
+    fun approvePendingProfile(onDone: (ServerConfig?) -> Unit = {}) {
         if (blocked()) return
-        doApprovePendingProfile()
+        doApprovePendingProfile(onDone)
     }
 
-    private fun doApprovePendingProfile() = viewModelScope.launch {
+    private fun doApprovePendingProfile(onDone: (ServerConfig?) -> Unit) = viewModelScope.launch {
         val p = PendingProfile.pending.value ?: return@launch
         PendingProfile.clear()
         app.settings.update { it.copy(trustedAtakSigner = p.caller.signerSha256) }
-        ProfileApplier(app).apply(p.profile)
-            .onSuccess { _toast.value = "Added ${it.name} from ATAK" }
+        val result = ProfileApplier(app).apply(p.profile)
+            .onSuccess { _toast.value = if (it.needsEnrollment) "Added ${it.name}: sign in to get its certificate" else "Added ${it.name} from ATAK" }
             .onFailure { _toast.value = it.message ?: "Could not apply the ATAK profile" }
+        onDone(result.getOrNull())
     }
 
     fun rejectPendingProfile() = PendingProfile.clear()

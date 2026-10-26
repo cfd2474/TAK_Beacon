@@ -14,6 +14,8 @@ final class BridgeProtocol {
     static final String APP_PACKAGE = "com.taksolutions.takbeacon";
     static final String ACTION_BIND = "com.taksolutions.takbeacon.action.BRIDGE";
     static final String ACTION_START_TRACKING = "com.taksolutions.takbeacon.action.START_TRACKING";
+    /** Opens TAK Beacon on the approval for a server we sent (app 1.4.6+). */
+    static final String ACTION_REVIEW_SERVER = "com.taksolutions.takbeacon.action.REVIEW_SERVER";
 
     static final int MSG_HELLO = 1;
     static final int MSG_QUERY = 2;

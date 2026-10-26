@@ -124,7 +124,7 @@ If ATAK has no client certificate for that server, TAK Beacon adds it and asks y
 #tak-slide[
 = Approve ATAK once
 #toolbox.side-by-side(columns: (7fr, 3fr, 3fr))[
-The first time ATAK sends a server, TAK Beacon asks you to approve it: tap its notification (or open the app), check the request and tap *Approve*.
+The first time ATAK sends a server, TAK Beacon opens in front of ATAK and asks you to approve it: check the request and tap *Approve*, and you are back in ATAK. (If it doesn't open, tap its notification.)
 
 Approving trusts this ATAK install: later servers from it are applied without asking. To revoke it, use *Forget* in TAK Beacon under *Settings, ATAK*.
 
@@ -250,7 +250,7 @@ While anything is missing, a red banner across the top of the Beacon screen list
 
 If Android no longer shows the prompt (it was refused twice), TAK Beacon opens its Android settings page instead: open *Permissions* and allow *Location: All the time* and *Notifications* there.
 
-*Start on boot* (*Settings, Startup and battery*) starts the beacon when the phone starts and whenever the app is opened.
+*Start on boot* (*Settings, Startup and battery*, on by default) starts the beacon when the phone starts and whenever the app is opened.
 ][
 #phone("screens/app_missing_permissions.jpg")
 ][

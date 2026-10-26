@@ -93,6 +93,11 @@
                 <action android:name="com.taksolutions.takbeacon.action.START_TRACKING" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+            <!-- Opened by the ATAK plugin to approve a server (and its certificates) it sent. -->
+            <intent-filter>
+                <action android:name="com.taksolutions.takbeacon.action.REVIEW_SERVER" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
 
         <!-- The priority alert, full screen; its own task so acknowledging returns to

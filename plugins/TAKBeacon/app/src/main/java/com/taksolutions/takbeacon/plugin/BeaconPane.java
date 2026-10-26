@@ -171,7 +171,9 @@ final class BeaconPane implements BeaconBridge.Listener {
             return;
         }
         if (request == BridgeProtocol.MSG_PUSH_PROFILE && BridgeProtocol.AWAITING_APPROVAL.equals(text)) {
-            say("Approve the server in TAK Beacon (tap its notification). This is asked once per ATAK install.");
+            // Bring TAK Beacon to the front on its approval; ATAK is in front, so Android allows it.
+            openApp(BridgeProtocol.ACTION_REVIEW_SERVER);
+            say("Approve the server in TAK Beacon. This is asked once per ATAK install.");
             return;
         }
         say(text);
