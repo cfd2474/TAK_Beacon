@@ -42,6 +42,8 @@ final class BeaconBridge {
         boolean trusted;
         boolean satellite;
         boolean locked;
+        /** Null from apps that don't report it (before 1.4.6). */
+        Boolean approvalPending;
     }
 
     interface Listener {
@@ -250,6 +252,8 @@ final class BeaconBridge {
                 // Absent from apps before 1.1: reads as false.
                 state.satellite = b.getBoolean(BridgeProtocol.KEY_SATELLITE);
                 state.locked = b.getBoolean(BridgeProtocol.KEY_LOCKED);
+                state.approvalPending = b.containsKey(BridgeProtocol.KEY_APPROVAL_PENDING)
+                        ? b.getBoolean(BridgeProtocol.KEY_APPROVAL_PENDING) : null;
                 notifyState();
                 break;
             case BridgeProtocol.MSG_RESULT:

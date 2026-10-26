@@ -60,6 +60,7 @@ object BridgeProtocol {
     const val KEY_TRUSTED = "trusted"               // this ATAK is approved for profile pushes
     const val KEY_SATELLITE = "satellite"           // on a constrained satellite network (protocol 1, app 1.1+)
     const val KEY_LOCKED = "locked"                 // PIN lock on (app 1.2+)
+    const val KEY_APPROVAL_PENDING = "approval_pending" // a server from ATAK awaits approval (app 1.4.6+)
     const val KEY_MESSAGE = "message"
 
     /** RESULT text: TAK Beacon is PIN-locked; start/stop and server pushes are refused. */

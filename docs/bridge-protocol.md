@@ -38,7 +38,7 @@ signer apply straight away. The user can revoke this in Settings → ATAK.
 | 3 | HEARTBEAT | `arg1` = 1 foreground / 0 leaving | none |
 | 4 | START | — | RESULT (`needs_foreground` → see below) |
 | 5 | STOP | — | RESULT |
-| 6 | PUSH_PROFILE | profile bundle | RESULT (`awaiting_approval` if not yet trusted: open `action.REVIEW_SERVER`, below) |
+| 6 | PUSH_PROFILE | profile bundle | RESULT (`awaiting_approval` if not yet trusted: open `action.REVIEW_SERVER`, below; STATE `approval_pending` turns false once it is decided, with `trusted` telling which way) |
 | 7 | EMERGENCY | `emergency` = `ALERT_911` \| `RING_THE_BELL` \| `IN_CONTACT` \| `GEO_FENCE` | RESULT |
 | 8 | CANCEL_EMERGENCY | — | RESULT |
 

@@ -49,6 +49,8 @@ final class BeaconPane implements BeaconBridge.Listener {
     private boolean restoreAfterUpdate;
     /** Start was tapped while the app wasn't running: send START once it connects. */
     private boolean startWhenConnected;
+    /** A server we sent is waiting for approval in TAK Beacon: replace the prompt once it's decided. */
+    private boolean awaitingApproval;
     private final Handler main = new Handler(Looper.getMainLooper());
     private final Runnable startFallback = new Runnable() {
         @Override
@@ -146,6 +148,11 @@ final class BeaconPane implements BeaconBridge.Listener {
                 say("The beacon is already on.");
             }
         }
+        // The server we sent was approved or rejected in TAK Beacon.
+        if (awaitingApproval && state.bound && Boolean.FALSE.equals(state.approvalPending)) {
+            awaitingApproval = false;
+            say(state.trusted ? "Server added to TAK Beacon." : "The server was not approved in TAK Beacon.");
+        }
         // After an update the app was killed: bring the beacon back if it was on.
         if (restoreAfterUpdate && state.bound && state.runState != null) {
             restoreAfterUpdate = false;
@@ -173,6 +180,7 @@ final class BeaconPane implements BeaconBridge.Listener {
         if (request == BridgeProtocol.MSG_PUSH_PROFILE && BridgeProtocol.AWAITING_APPROVAL.equals(text)) {
             // Bring TAK Beacon to the front on its approval; ATAK is in front, so Android allows it.
             openApp(BridgeProtocol.ACTION_REVIEW_SERVER);
+            awaitingApproval = true;
             say("Approve the server in TAK Beacon. This is asked once per ATAK install.");
             return;
         }

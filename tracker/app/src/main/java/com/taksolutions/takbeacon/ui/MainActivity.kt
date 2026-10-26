@@ -116,12 +116,31 @@ class MainActivity : ComponentActivity() {
     private var showServers by mutableStateOf(false)
     /** Counts resumes, so the permission walk continues after a settings page. */
     private var resumes by mutableStateOf(0)
+    /** Ask for missing permissions now (the launch check was skipped because the plugin opened us). */
+    private var walkRequest by mutableStateOf(0)
+    /**
+     * The plugin opened us, so the permission check was skipped; it runs at the next resume
+     * the plugin didn't cause (the user opening the app, Recents, a rotation). Kept across
+     * recreation, like [reviewForPlugin].
+     */
+    private var walkSkipped = false
+    private var pluginIntentSinceResume = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         if (savedInstanceState == null) handleIntent(intent)
+        else {
+            walkSkipped = savedInstanceState.getBoolean(STATE_WALK_SKIPPED)
+            reviewForPlugin = savedInstanceState.getBoolean(STATE_REVIEW_FOR_PLUGIN)
+        }
         setContent { BeaconTheme { App() } }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(STATE_WALK_SKIPPED, walkSkipped)
+        outState.putBoolean(STATE_REVIEW_FOR_PLUGIN, reviewForPlugin)
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -142,6 +161,13 @@ class MainActivity : ComponentActivity() {
         BeaconApp.from(this).alerts.appInFront = true
         refreshPermissions()
         resumes++
+        // The user is here now (not the plugin opening us, nor an approval on screen): run the
+        // permission check the plugin's launch skipped.
+        if (walkSkipped && !pluginIntentSinceResume && !reviewForPlugin && PendingProfile.pending.value == null) {
+            walkSkipped = false
+            walkRequest++
+        }
+        pluginIntentSinceResume = false
         if (vm.settings.value?.kioskLock == true) runCatching { startLockTask() }
     }
 
@@ -157,10 +183,14 @@ class MainActivity : ComponentActivity() {
                 // Locked: only to restore a beacon that was on (e.g. after an update).
                 if (!app.locked || app.wasRunning) startRequestedByPlugin = true
                 launchedByPlugin = true
+                walkSkipped = true
+                pluginIntentSinceResume = true
             }
             ACTION_REVIEW_ATAK_PROFILE -> Unit // the approval dialog shows whenever a profile is pending
             BridgeProtocol.ACTION_REVIEW_SERVER -> {
                 launchedByPlugin = true
+                walkSkipped = true
+                pluginIntentSinceResume = true
                 if (PendingProfile.pending.value != null) reviewForPlugin = true
                 getSystemService(android.app.NotificationManager::class.java).cancel(BridgeService.APPROVAL_NOTIFICATION)
             }
@@ -318,6 +348,15 @@ class MainActivity : ComponentActivity() {
             if (restore && tracker.runState == RunState.STOPPED && has(Manifest.permission.ACCESS_FINE_LOCATION)) {
                 startTracking()
             }
+        }
+
+        // A permission check the plugin's launch skipped (see walkRequest).
+        LaunchedEffect(walkRequest, settings != null) {
+            if (walkRequest == 0 || settings == null) return@LaunchedEffect
+            refreshPermissions()
+            if (missing.isNotEmpty() && !walkAll && !startAfter && special == null && awaiting == null &&
+                !locationDisclosure && !backgroundDisclosure
+            ) requestPermissions(userAsked = false)
         }
 
         // Back from a special permission's settings page: on to the next one.
@@ -736,7 +775,12 @@ class MainActivity : ComponentActivity() {
     private fun afterReview(server: com.taksolutions.takbeacon.data.ServerConfig?) {
         if (!reviewForPlugin) return
         reviewForPlugin = false
-        if (server?.needsEnrollment == true) showServers = true else moveTaskToBack(true)
+        if (server?.needsEnrollment == true) {
+            // Staying in the app: now is the time for the permission check the launch skipped.
+            showServers = true
+            walkSkipped = false
+            walkRequest++
+        } else moveTaskToBack(true)
     }
 
     /** Android's own "allow unrestricted battery" prompt; falls back to the settings list. */
@@ -755,5 +799,7 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         const val ACTION_REVIEW_ATAK_PROFILE = "com.taksolutions.takbeacon.REVIEW_ATAK_PROFILE"
+        private const val STATE_WALK_SKIPPED = "walk_skipped"
+        private const val STATE_REVIEW_FOR_PLUGIN = "review_for_plugin"
     }
 }

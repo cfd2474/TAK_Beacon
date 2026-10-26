@@ -142,6 +142,7 @@ class BridgeService : Service() {
             putBoolean(BridgeProtocol.KEY_SATELLITE, st.onSatellite)
             putBoolean(BridgeProtocol.KEY_LOCKED, app.locked)
             putBoolean(BridgeProtocol.KEY_TRUSTED, trusted != null && trusted.equals(caller.signerSha256, true))
+            putBoolean(BridgeProtocol.KEY_APPROVAL_PENDING, PendingProfile.pending.value != null)
         }
         send(replyTo, Message.obtain(null, BridgeProtocol.MSG_STATE).apply { data = b })
     }

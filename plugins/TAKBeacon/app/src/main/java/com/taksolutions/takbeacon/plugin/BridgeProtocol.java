@@ -49,6 +49,8 @@ final class BridgeProtocol {
     static final String KEY_TRUSTED = "trusted";
     static final String KEY_SATELLITE = "satellite";
     static final String KEY_LOCKED = "locked";
+    /** A server we sent is waiting for approval in TAK Beacon (app 1.4.6+; absent before). */
+    static final String KEY_APPROVAL_PENDING = "approval_pending";
     static final String KEY_MESSAGE = "message";
 
     /** RESULT text meaning: start me from a foreground Activity instead. */
