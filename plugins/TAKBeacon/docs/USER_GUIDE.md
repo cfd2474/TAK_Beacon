@@ -116,6 +116,27 @@ emergency is never paused.
 unit* (the default, as ATAK reports itself), *Vehicle*, *Aircraft* or *Boat*.
 Your organization can also set it.
 
+### The map and other users
+
+The Beacon screen's map shows you, and the other TAK users your server shares
+with you (the same users ATAK would show, depending on your groups), while the
+beacon is connected:
+
+- each user is a dot in their team colour with their callsign, and a wedge
+  pointing where they are heading while they move;
+- a dot fades once their reports are being missed, and disappears when their
+  last report goes stale or they disconnect;
+- tap a user for their team and role, distance and bearing from you, speed,
+  position and how long ago they reported, and **Message** to open a direct
+  conversation with them (when messaging is on);
+- drag or pinch to look around; the **locate** button goes back to following
+  you. The **full-screen** button opens a larger map (Back or the close button
+  returns).
+
+Turn this off in **Settings → Display → Show other users**; your organization
+can also set it. Other users are kept in memory only, and are not shown while
+on satellite (the map is off then).
+
 ## 4. Emergencies
 
 Emergencies are sent from the TAK Beacon app, so they work with ATAK closed:

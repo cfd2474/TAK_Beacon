@@ -38,6 +38,7 @@ the user's own setting.
 | `messaging` | choice `full`/`read_only`/`off` | `full` | TAK chat: receive and reply, receive only, or off (1.3.5+). |
 | `alert_keywords` | string | (none) | Priority-alert keywords, comma separated (up to 50). A received chat containing one sounds an alarm at full volume until acknowledged, at most 2 minutes. Replaces the user's list, which becomes read only (1.4.3+). |
 | `alert_while_paused_for_atak` | bool | (unset) | `true`: priority alerts also sound while the beacon is paused because ATAK is running; `false`: they stay silent then. Unset leaves it to the user (default off); set, it is read only (1.4.5+). |
+| `show_contacts` | bool | (unset) | `true`: the map shows the other TAK users the server shares (and the user can message them from it); `false`: only the device itself. Unset leaves it to the user (default on); set, it is read only (1.4.7+). |
 | `start_beacon` | bool | false | Turn the beacon on when the configuration arrives and at every boot. The user can still stop it. |
 
 Keys holding secrets contain "password", so consoles that mask such keys (ATLAS

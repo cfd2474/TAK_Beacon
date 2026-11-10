@@ -230,6 +230,8 @@ class MainActivity : ComponentActivity() {
         var openThread by rememberSaveable { mutableStateOf<String?>(null) }
 
         var tab by rememberSaveable { mutableStateOf(0) }
+        var fullMap by rememberSaveable { mutableStateOf(false) }
+        val contacts by BeaconApp.from(this).contacts.contacts.collectAsStateWithLifecycle()
         var scanning by remember { mutableStateOf(false) }
         var manual by remember { mutableStateOf(false) }
         var manualError by remember { mutableStateOf<String?>(null) }
@@ -427,6 +429,28 @@ class MainActivity : ComponentActivity() {
             if (tab == 3 && s.messagingMode == MessagingMode.OFF) tab = 0
             // The open thread is read, and notifies nothing while on screen.
             val showing = if (tab == 3) openThread else null
+            // Message from the map: a direct conversation with that user.
+            val messageContact: ((com.taksolutions.takbeacon.contacts.Contact) -> Unit)? =
+                if (s.messagingMode == MessagingMode.OFF) null else { c ->
+                    fullMap = false
+                    openThread = chat.openDirect(c.uid, c.callsign, c.serverId)
+                    tab = 3
+                }
+            val shownContacts = if (s.showContacts) contacts.values.sortedBy { it.callsign } else emptyList()
+            val mapFix = tracker.fix?.takeIf { s.showMap && !tracker.onSatellite }
+            if (fullMap && tab == 0 && mapFix != null) {
+                com.taksolutions.takbeacon.ui.home.FullScreenMap(
+                    settings = s, lat = mapFix.lat, lon = mapFix.lon,
+                    color = when {
+                        tracker.emergency != null -> BeaconTheme.status.sos
+                        tracker.runState == com.taksolutions.takbeacon.service.RunState.TRANSMITTING -> BeaconTheme.status.live
+                        tracker.runState == com.taksolutions.takbeacon.service.RunState.PAUSED_FOR_ATAK ||
+                            tracker.runState == com.taksolutions.takbeacon.service.RunState.PAUSED_SATELLITE -> BeaconTheme.status.paused
+                        else -> BeaconTheme.status.waiting
+                    },
+                    contacts = shownContacts, onMessage = messageContact, onClose = { fullMap = false },
+                )
+            } else if (fullMap && tab == 0) fullMap = false
             LaunchedEffect(showing, chatData.unread(showing)) {
                 chatOnScreen = showing
                 chat.visibleThread = showing
@@ -446,6 +470,9 @@ class MainActivity : ComponentActivity() {
                     onOpenServers = { tab = 1 },
                     unreadMessages = if (s.messagingMode == MessagingMode.OFF) 0 else chatData.unread(),
                     onOpenMessages = { tab = 3; openThread = null },
+                    contacts = shownContacts,
+                    onMessageContact = messageContact,
+                    onFullScreenMap = { fullMap = true },
                     onLockToggle = {
                         when {
                             s.locked -> pinAction = PinAction.UNLOCK
@@ -456,7 +483,8 @@ class MainActivity : ComponentActivity() {
                 )
                 3 -> MessagesScreen(
                     data = chatData,
-                    offered = listOfNotNull(chat.threadFor(ChatManager.KEY_ALL, s), chat.threadFor(chat.teamKey(s), s)),
+                    offered = listOfNotNull(chat.threadFor(ChatManager.KEY_ALL, s), chat.threadFor(chat.teamKey(s), s),
+                        openThread?.takeIf { it.startsWith("dm:") }?.let { chat.threadFor(it, s) }),
                     openKey = openThread,
                     onOpen = { openThread = it },
                     canSend = !s.locked && s.messagingMode == MessagingMode.FULL,

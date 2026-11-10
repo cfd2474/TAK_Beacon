@@ -149,6 +149,13 @@
         android:title="@string/mdm_alert_while_atak_title"
         android:description="@string/mdm_alert_while_atak_desc" />
 
+    <!-- No defaultValue: unset leaves it to the user. -->
+    <restriction
+        android:key="show_contacts"
+        android:restrictionType="bool"
+        android:title="@string/mdm_show_contacts_title"
+        android:description="@string/mdm_show_contacts_desc" />
+
     <restriction
         android:key="start_beacon"
         android:restrictionType="bool"

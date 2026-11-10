@@ -93,6 +93,7 @@ fun SettingsScreen(
     val mMode = "reporting_mode" in managedFields
     val mKeywords = "alert_keywords" in managedFields
     val mAlertAtak = "alert_while_paused_for_atak" in managedFields
+    val mContacts = "show_contacts" in managedFields
     val adaptive = s.reportingMode == com.taksolutions.takbeacon.data.ReportingMode.ADAPTIVE
     CompositionLocalProvider(LocalSettingsLocked provides s.locked) {
     Column(
@@ -277,6 +278,12 @@ fun SettingsScreen(
             }
             ToggleRow("Show map", "OpenStreetMap preview on the Beacon screen", s.showMap) { v -> onChange { it.copy(showMap = v) } }
             ToggleRow("Dark map", "Inverted tiles for low light", s.darkMap, enabled = s.showMap) { v -> onChange { it.copy(darkMap = v) } }
+            ToggleRow(
+                "Show other users",
+                (if (mContacts) "Set by your organization. " else "") +
+                    "Other TAK users the server shares, on the map, while the beacon is connected. Tap one for distance and bearing, or to message them.",
+                s.showContacts, enabled = s.showMap && !mContacts,
+            ) { v -> onChange { it.copy(showContacts = v) } }
         }
 
         Section("Safety") {

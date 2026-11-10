@@ -43,6 +43,8 @@ data class ManagedConfig(
     val alertKeywords: List<String>? = null,
     /** Priority alerts also sound while paused for ATAK; null when the MDM doesn't set it. */
     val alertWhilePausedForAtak: Boolean? = null,
+    /** Other users on the map; null when the MDM doesn't set it. */
+    val showContacts: Boolean? = null,
     /** Turn the beacon on when the config arrives and on every boot (the user can still stop it). */
     val startBeacon: Boolean = false,
 ) {
@@ -61,6 +63,7 @@ data class ManagedConfig(
             if (reportingMode != null) add(FIELD_REPORTING_MODE)
             if (alertKeywords != null) add(FIELD_ALERT_KEYWORDS)
             if (alertWhilePausedForAtak != null) add(FIELD_ALERT_WHILE_ATAK)
+            if (showContacts != null) add(FIELD_SHOW_CONTACTS)
             if (startBeacon) add(FIELD_START_ON_BOOT)
         }
 
@@ -92,6 +95,7 @@ data class ManagedConfig(
         const val FIELD_REPORTING_MODE = "reporting_mode"
         const val FIELD_ALERT_KEYWORDS = "alert_keywords"
         const val FIELD_ALERT_WHILE_ATAK = "alert_while_paused_for_atak"
+        const val FIELD_SHOW_CONTACTS = "show_contacts"
 
         // Restriction keys (res/xml/app_restrictions.xml). Secrets contain "password"
         // so MDM consoles mask them.
@@ -117,6 +121,7 @@ data class ManagedConfig(
         const val K_REPORTING_MODE = "reporting_mode"
         const val K_ALERT_KEYWORDS = "alert_keywords"
         const val K_ALERT_WHILE_ATAK = "alert_while_paused_for_atak"
+        const val K_SHOW_CONTACTS = "show_contacts"
 
         /**
          * Reads a restrictions bundle flattened to a map. Returns null when nothing usable
@@ -177,6 +182,7 @@ data class ManagedConfig(
                 },
                 alertKeywords = str(K_ALERT_KEYWORDS)?.let(com.taksolutions.takbeacon.chat.KeywordAlert::parse)?.takeIf { it.isNotEmpty() },
                 alertWhilePausedForAtak = boolOrNull(K_ALERT_WHILE_ATAK),
+                showContacts = boolOrNull(K_SHOW_CONTACTS),
             )
             return c.takeIf { it.hasServer || it.managedFields.isNotEmpty() || it.version != null }
         }

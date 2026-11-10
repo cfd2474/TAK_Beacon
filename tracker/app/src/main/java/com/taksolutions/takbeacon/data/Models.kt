@@ -130,6 +130,8 @@ data class BeaconSettings(
     val alertKeywords: List<String> = emptyList(),
     /** Priority alerts also sound while the beacon is paused because ATAK is running (normally silent then). */
     val alertWhilePausedForAtak: Boolean = false,
+    /** Other TAK users the server shares, on the map. */
+    val showContacts: Boolean = true,
 ) {
     val hasPin: Boolean get() = pinHash != null && pinSalt != null
 

@@ -20,6 +20,8 @@ class ConnectionManager(
     /** Set by the app: chat events received (serverId, xml), and chat sends confirmed (tag). */
     @Volatile var onChat: (String, String) -> Unit = { _, _ -> }
     @Volatile var onChatWritten: (String) -> Unit = {}
+    /** Set by the app: other users' position reports and departures (serverId, xml). */
+    @Volatile var onContact: (String, String) -> Unit = { _, _ -> }
 
     private val connections = mutableMapOf<String, TakConnection>()
     private val _status = MutableStateFlow<Map<String, LinkStatus>>(emptyMap())
@@ -42,7 +44,8 @@ class ConnectionManager(
                 val conn = TakConnection(server, certs, selfUid, pingIntervalMs, onStatus = { sid, st ->
                     // A late callback from a connection that was just replaced must not resurrect it.
                     synchronized(this) { if (connections[sid]?.server == server) _status.update { it + (sid to st) } }
-                }, onChat = { sid, xml -> onChat(sid, xml) }, onChatWritten = { tag -> onChatWritten(tag) })
+                }, onChat = { sid, xml -> onChat(sid, xml) }, onChatWritten = { tag -> onChatWritten(tag) },
+                    onContact = { sid, xml -> onContact(sid, xml) })
                 connections[id] = conn
                 conn.start(scope)
             }

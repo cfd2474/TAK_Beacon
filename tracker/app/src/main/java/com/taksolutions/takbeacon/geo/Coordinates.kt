@@ -1,6 +1,7 @@
 package com.taksolutions.takbeacon.geo
 
 import com.taksolutions.takbeacon.data.CoordFormat
+import com.taksolutions.takbeacon.data.SpeedUnit
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.floor
@@ -89,4 +90,33 @@ object Coordinates {
     /** Compass bearing to an 8-point name. */
     fun cardinal(deg: Float): String =
         arrayOf("N", "NE", "E", "SE", "S", "SW", "W", "NW")[(((deg % 360) + 360) % 360 / 45f + 0.5f).toInt() % 8]
+
+    private const val EARTH_RADIUS_M = 6_371_008.8
+
+    /** Great-circle distance in metres (a sphere: close enough for a readout). */
+    fun distanceM(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        val p1 = Math.toRadians(lat1)
+        val p2 = Math.toRadians(lat2)
+        val dp = p2 - p1
+        val dl = Math.toRadians(lon2 - lon1)
+        val a = sin(dp / 2) * sin(dp / 2) + cos(p1) * cos(p2) * sin(dl / 2) * sin(dl / 2)
+        return 2 * EARTH_RADIUS_M * kotlin.math.atan2(sqrt(a), sqrt(1 - a))
+    }
+
+    /** Initial true bearing from the first point to the second, 0-360. */
+    fun bearingDeg(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        val p1 = Math.toRadians(lat1)
+        val p2 = Math.toRadians(lat2)
+        val dl = Math.toRadians(lon2 - lon1)
+        val y = sin(dl) * cos(p2)
+        val x = cos(p1) * sin(p2) - sin(p1) * cos(p2) * cos(dl)
+        return (Math.toDegrees(kotlin.math.atan2(y, x)) + 360) % 360
+    }
+
+    /** A distance in the units that go with [unit]: miles/feet, nautical miles, or km/m. */
+    fun formatDistance(m: Double, unit: SpeedUnit): String = when (unit) {
+        SpeedUnit.MPH -> if (m < 1609.344 * 0.1) "%.0f ft".format(m * 3.28084) else "%.1f mi".format(m / 1609.344)
+        SpeedUnit.KNOTS -> if (m < 185.2) "%.0f m".format(m) else "%.1f NM".format(m / 1852.0)
+        else -> if (m < 1000) "%.0f m".format(m) else "%.1f km".format(m / 1000)
+    }
 }

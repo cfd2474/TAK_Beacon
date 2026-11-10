@@ -10,6 +10,7 @@ import com.taksolutions.takbeacon.enroll.DataPackageImporter
 import com.taksolutions.takbeacon.enroll.EnrollmentClient
 import com.taksolutions.takbeacon.chat.ChatManager
 import com.taksolutions.takbeacon.chat.PriorityAlert
+import com.taksolutions.takbeacon.contacts.ContactManager
 import com.taksolutions.takbeacon.mdm.ManagedConfigManager
 import com.taksolutions.takbeacon.net.ConnectionManager
 import com.taksolutions.takbeacon.security.CertStore
@@ -40,6 +41,8 @@ class BeaconApp : Application() {
     lateinit var chat: ChatManager
         private set
     lateinit var alerts: PriorityAlert
+        private set
+    lateinit var contacts: ContactManager
         private set
 
     val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -78,6 +81,8 @@ class BeaconApp : Application() {
         alerts = PriorityAlert(this)
         chat = ChatManager(this)
         chat.start()
+        contacts = ContactManager(this)
+        contacts.start()
         managed = ManagedConfigManager(this)
         managed.register()
         appScope.launch { managed.apply() }

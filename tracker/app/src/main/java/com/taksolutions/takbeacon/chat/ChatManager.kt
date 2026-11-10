@@ -151,7 +151,20 @@ class ChatManager(private val app: BeaconApp) {
     fun threadFor(key: String, s: BeaconSettings): ChatThread? = when {
         key == KEY_ALL -> ChatThread(KEY_ALL, GeoChat.ALL_CHAT_ROOMS, ThreadKind.ALL_ROOMS)
         key == teamKey(s) -> ChatThread(key, s.team.cotName, ThreadKind.TEAM, roomId = s.team.cotName)
+        key == started?.key -> started
         else -> null
+    }
+
+    /** A direct conversation opened from the map, before anything is sent in it. */
+    @Volatile private var started: ChatThread? = null
+
+    /** The key of a direct conversation with [uid]; a new one is offered until the app restarts. */
+    fun openDirect(uid: String, callsign: String, serverId: String?): String {
+        val key = "dm:$uid"
+        if (_data.value.thread(key) == null) {
+            started = ChatThread(key, callsign, ThreadKind.DIRECT, peerUid = uid, peerCallsign = callsign, serverId = serverId)
+        }
+        return key
     }
 
     fun teamKey(s: BeaconSettings) = "team:${s.team.cotName}"

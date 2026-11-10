@@ -52,6 +52,7 @@ class SettingsRepository(private val context: Context) {
         val REPORTING_MODE = stringPreferencesKey("reporting_mode")
         val ALERT_KEYWORDS = stringPreferencesKey("alert_keywords")
         val ALERT_WHILE_ATAK = booleanPreferencesKey("alert_while_paused_for_atak")
+        val SHOW_CONTACTS = booleanPreferencesKey("show_contacts")
     }
 
     val settings: Flow<BeaconSettings> = context.settingsStore.data.map(::settingsFrom)
@@ -110,6 +111,7 @@ class SettingsRepository(private val context: Context) {
             p[K.REPORTING_MODE] = n.reportingMode.name
             p[K.ALERT_KEYWORDS] = n.alertKeywords.joinToString("\n")
             p[K.ALERT_WHILE_ATAK] = n.alertWhilePausedForAtak
+            p[K.SHOW_CONTACTS] = n.showContacts
         }
     }
 
@@ -147,6 +149,7 @@ class SettingsRepository(private val context: Context) {
         reportingMode = p[K.REPORTING_MODE]?.let { runCatching { ReportingMode.valueOf(it) }.getOrNull() } ?: ReportingMode.FIXED,
         alertKeywords = p[K.ALERT_KEYWORDS]?.let(com.taksolutions.takbeacon.chat.KeywordAlert::parse) ?: emptyList(),
         alertWhilePausedForAtak = p[K.ALERT_WHILE_ATAK] ?: false,
+        showContacts = p[K.SHOW_CONTACTS] ?: true,
     )
 
     companion object {

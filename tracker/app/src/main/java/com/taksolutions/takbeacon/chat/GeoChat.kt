@@ -148,12 +148,12 @@ object GeoChat {
     // --- minimal, safe extraction -------------------------------------------------
 
     /** The start tag `<name ...>` (attributes only), or null. */
-    private fun tag(xml: String, name: String): String? {
+    internal fun tag(xml: String, name: String): String? {
         val m = Regex("<$name(\\s[^>]*)?/?>").find(xml) ?: return null
         return m.groupValues[1]
     }
 
-    private fun attr(tag: String, name: String): String? =
+    internal fun attr(tag: String, name: String): String? =
         Regex("(?:^|\\s)$name\\s*=\\s*(\"([^\"]*)\"|'([^']*)')").find(tag)?.let { unescape(it.groupValues[2].ifEmpty { it.groupValues[3] }) }
 
     private fun remarks(xml: String): String? {
@@ -179,7 +179,7 @@ object GeoChat {
 
     private fun fmt() = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply { timeZone = TimeZone.getTimeZone("UTC") }
     private fun time(ms: Long) = fmt().format(Date(ms))
-    private fun parseTime(s: String): Long? = runCatching {
+    internal fun parseTime(s: String): Long? = runCatching {
         val t = if (s.contains('.')) s else s.replace("Z", ".000Z")
         fmt().parse(t.replace(Regex("\\.(\\d{3})\\d*Z$"), ".$1Z"))?.time
     }.getOrNull()

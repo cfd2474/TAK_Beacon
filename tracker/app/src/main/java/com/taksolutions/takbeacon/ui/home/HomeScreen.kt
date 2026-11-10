@@ -79,6 +79,9 @@ fun HomeScreen(
     onLockToggle: () -> Unit,
     unreadMessages: Int = 0,
     onOpenMessages: () -> Unit = {},
+    contacts: List<com.taksolutions.takbeacon.contacts.Contact> = emptyList(),
+    onMessageContact: ((com.taksolutions.takbeacon.contacts.Contact) -> Unit)? = null,
+    onFullScreenMap: () -> Unit = {},
 ) {
     val running = tracker.runState != RunState.STOPPED
     val status = BeaconTheme.status
@@ -193,10 +196,15 @@ fun HomeScreen(
                 )
             }
         } else if (settings.showMap && fix != null) {
-            Section("Map") {
-                BeaconMap(
-                    lat = fix.lat, lon = fix.lon, dark = settings.darkMap, color = stateColor,
-                    modifier = Modifier.fillMaxWidth().height(220.dp).clip(RoundedCornerShape(14.dp)),
+            Section("Map", trailing = {
+                if (settings.showContacts) Text(usersLabel(contacts.size), style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }) {
+                ContactMap(
+                    settings = settings, lat = fix.lat, lon = fix.lon, color = stateColor, contacts = contacts,
+                    onMessage = onMessageContact,
+                    modifier = Modifier.fillMaxWidth().height(260.dp).clip(RoundedCornerShape(14.dp)),
+                    onFullScreen = onFullScreenMap,
                 )
             }
         }

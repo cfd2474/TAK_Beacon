@@ -14,6 +14,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import com.taksolutions.takbeacon.chat.GeoChat
+import com.taksolutions.takbeacon.contacts.ContactCot
 import java.io.IOException
 import java.io.InputStreamReader
 import java.io.OutputStream
@@ -41,8 +42,9 @@ data class LinkStatus(
 
 /**
  * One streaming connection to a TAK server (TLS on 8089, or plain TCP).
- * Reconnects with backoff until [stop]. Incoming traffic is read and discarded:
- * a client that never reads stalls the server's writes and gets dropped.
+ * Reconnects with backoff until [stop]. Incoming traffic is always read (a client
+ * that never reads stalls the server's writes and gets dropped): chat and other
+ * users' position reports are passed on, the rest is discarded.
  *
  * Outgoing events: routine position reports keep only the newest (an old
  * position is worthless after a reconnect); emergency alerts and cancels have
@@ -64,6 +66,8 @@ class TakConnection(
     private val onChat: (String, String) -> Unit = { _, _ -> },
     /** A queued chat event (by its tag) has been written to the server. */
     private val onChatWritten: (String) -> Unit = {},
+    /** Each position report or departure of another user: (serverId, xml). */
+    private val onContact: (String, String) -> Unit = { _, _ -> },
 ) {
     private class Outgoing(val xml: String, val tag: String?)
 
@@ -196,8 +200,8 @@ class TakConnection(
     }
 
     /**
-     * Reads the server's stream: chat events go to [onChat], everything else is
-     * dropped. A read error (such as a TLS alert) is kept for [run] to classify.
+     * Reads the server's stream: chat events go to [onChat], position reports and
+     * departures to [onContact], everything else is dropped. A read error (such as a TLS alert) is kept for [run] to classify.
      */
     private fun drain(s: Socket, error: AtomicReference<IOException?>) {
         val buf = CharArray(16 * 1024)
@@ -208,7 +212,12 @@ class TakConnection(
                 val n = input.read(buf)
                 if (n < 0) break
                 pending.append(buf, 0, n)
-                splitEvents(pending) { ev -> if (GeoChat.isChat(ev)) runCatching { onChat(server.id, ev) } }
+                splitEvents(pending) { ev ->
+                    when {
+                        GeoChat.isChat(ev) -> runCatching { onChat(server.id, ev) }
+                        ContactCot.isCandidate(ev) -> runCatching { onContact(server.id, ev) }
+                    }
+                }
             }
         } catch (e: IOException) {
             error.set(e)
