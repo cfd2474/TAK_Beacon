@@ -40,7 +40,7 @@ enum class Role(val cotName: String) {
     }
 }
 
-enum class CoordFormat(val label: String) { DD("Decimal degrees"), DMS("Deg/Min/Sec"), MGRS("MGRS") }
+enum class CoordFormat(val label: String) { DD("Decimal degrees"), DDM("Deg/Dec Min"), DMS("Deg/Min/Sec"), MGRS("MGRS") }
 
 enum class SpeedUnit(val label: String, val fromMps: Double) {
     KMH("km/h", 3.6), MPH("mph", 2.2369362921), KNOTS("kn", 1.9438444924), MPS("m/s", 1.0)
@@ -132,10 +132,19 @@ data class BeaconSettings(
     val alertWhilePausedForAtak: Boolean = false,
     /** Other TAK users the server shares, on the map. */
     val showContacts: Boolean = true,
+    /**
+     * Location confidence: a fix whose accuracy (CE, metres) is worse than this is not
+     * reported. GPS or network, whichever meets it ([com.taksolutions.takbeacon.service.FixFilter]).
+     */
+    val accuracyLimitM: Int = DEFAULT_ACCURACY_LIMIT_M,
 ) {
     val hasPin: Boolean get() = pinHash != null && pinSalt != null
 
     companion object {
+        const val DEFAULT_ACCURACY_LIMIT_M = 50
+        const val MIN_ACCURACY_LIMIT_M = 5
+        const val MAX_ACCURACY_LIMIT_M = 500
+
         /** ATAK's default situational-awareness multicast group. */
         const val DEFAULT_UDP_HOST = "239.2.3.1"
         const val DEFAULT_UDP_PORT = 6969

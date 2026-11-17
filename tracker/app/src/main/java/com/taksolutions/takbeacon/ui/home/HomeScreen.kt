@@ -127,7 +127,7 @@ fun HomeScreen(
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                 BeaconPulse(active = tracker.runState == RunState.TRANSMITTING || tracker.emergency != null, color = stateColor)
                 Spacer(Modifier.height(4.dp))
-                Text(headline(tracker.runState), style = MaterialTheme.typography.headlineSmall, color = stateColor)
+                Text(headline(tracker), style = MaterialTheme.typography.headlineSmall, color = stateColor)
                 Text(
                     subline(tracker, settings, servers, links, now),
                     style = MaterialTheme.typography.bodyMedium,
@@ -182,7 +182,13 @@ fun HomeScreen(
             }
             Spacer(Modifier.height(12.dp))
             Row(Modifier.fillMaxWidth()) {
-                Readout("ACCURACY", fix?.ce?.let { "±%.0f m".format(it) } ?: "—", Modifier.weight(1f))
+                val poor = running && fix != null && !tracker.fixReportable
+                Readout(
+                    if (poor) "ACCURACY > ${tracker.accuracyLimitM} m" else "ACCURACY",
+                    fix?.ce?.let { "±%.0f m".format(it) } ?: if (fix != null) "unknown" else "—",
+                    Modifier.weight(1f),
+                    valueColor = if (poor) MaterialTheme.colorScheme.error else Color.Unspecified,
+                )
                 Readout("SOURCE", fix?.source ?: "—", Modifier.weight(1f))
                 Readout("BATTERY", tracker.batteryPct?.let { "$it%" } ?: "—", Modifier.weight(1f))
             }
@@ -201,7 +207,7 @@ fun HomeScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }) {
                 ContactMap(
-                    settings = settings, lat = fix.lat, lon = fix.lon, color = stateColor, contacts = contacts,
+                    settings = settings, fix = fix, color = stateColor, contacts = contacts,
                     onMessage = onMessageContact,
                     modifier = Modifier.fillMaxWidth().height(260.dp).clip(RoundedCornerShape(14.dp)),
                     onFullScreen = onFullScreenMap,
@@ -286,14 +292,18 @@ private fun EmergencyBanner(type: EmergencyType, onCancel: () -> Unit) {
     }
 }
 
-private fun headline(s: RunState) = when (s) {
+private fun headline(t: TrackerState) = when (t.runState) {
     RunState.STOPPED -> "Beacon off"
-    RunState.WAITING_FOR_FIX -> "Acquiring GPS"
+    RunState.WAITING_FOR_FIX -> if (weakFix(t) != null) "Weak location" else "Acquiring GPS"
     RunState.TRANSMITTING -> "Transmitting"
     RunState.PAUSED_FOR_ATAK -> "Paused for ATAK"
     RunState.PAUSED_SATELLITE -> "Paused on satellite"
     RunState.NO_SERVERS -> "No servers"
 }
+
+/** The accuracy of the shown fix when it is too poor to report, else null. */
+private fun weakFix(t: TrackerState): Double? =
+    if (t.fixReportable) null else t.fix?.let { it.ce ?: Double.POSITIVE_INFINITY }
 
 private fun subline(t: TrackerState, s: BeaconSettings, servers: List<ServerConfig>, links: Map<String, LinkStatus>, now: Long): String {
     val connected = links.values.count { it.state == LinkState.CONNECTED }
@@ -301,7 +311,10 @@ private fun subline(t: TrackerState, s: BeaconSettings, servers: List<ServerConf
     return when (t.runState) {
         RunState.STOPPED -> if (servers.isEmpty()) "Add a server, then start the beacon" else "Not sharing your position"
         RunState.NO_SERVERS -> "Enable or add a server to start reporting"
-        RunState.WAITING_FOR_FIX -> "Waiting for a location fix · $connected/$enabled connected"
+        RunState.WAITING_FOR_FIX -> (weakFix(t)?.let { ce ->
+            if (ce.isInfinite()) "Accuracy unknown: not reporting"
+            else "Accuracy ±%.0f m is over your %d m limit: not reporting".format(ce, t.accuracyLimitM)
+        } ?: "Waiting for a location fix") + " · $connected/$enabled connected"
         RunState.PAUSED_FOR_ATAK -> "ATAK is running and reporting your position"
         RunState.PAUSED_SATELLITE -> "On a satellite network, and satellite data is off in Settings"
         RunState.TRANSMITTING -> {

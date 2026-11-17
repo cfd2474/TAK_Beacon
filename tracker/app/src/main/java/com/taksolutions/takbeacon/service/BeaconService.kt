@@ -56,9 +56,8 @@ class BeaconService : LifecycleService() {
     private var udp: UdpBroadcaster? = null
 
     @Volatile private var settings: BeaconSettings? = null
-    @Volatile private var lastFix: Fix? = null
-    @Volatile private var lastFixElapsed = 0L
-    @Volatile private var lastGpsElapsed = 0L
+    /** Which fix is accurate enough to report (location confidence). Main thread only. */
+    private val fixes = FixFilter()
     private var lastPliElapsed = 0L
     // Adaptive reporting: movement from the fixes, a report requested by a step up in
     // movement, and the course at the last report (for turns).
@@ -141,7 +140,7 @@ class BeaconService : LifecycleService() {
     private fun tick() {
         val s = settings ?: return
         val now = SystemClock.elapsedRealtime()
-        val fix = lastFix
+        val fix = fixes.reportable(now, s.accuracyLimitM)
         val state = BeaconStatus.state.value
         val emergency = state.emergency
         val serverCount = app.servers.servers.value.count { it.enabled && !it.needsEnrollment }
@@ -174,12 +173,14 @@ class BeaconService : LifecycleService() {
             BeaconStatus.update { it.copy(lastSentMs = System.currentTimeMillis()) }
         }
         // Keep an active emergency alive on the map.
-        if (emergency != null && fix != null && now - lastEmergencyElapsed >= EMERGENCY_REPEAT_MS) {
+        val alertFix = if (emergency != null) emergencyFix(s) else null
+        if (emergency != null && alertFix != null && now - lastEmergencyElapsed >= EMERGENCY_REPEAT_MS) {
             lastEmergencyElapsed = now
-            send(Cot.emergency(identity(s), fix, emergency), priority = true)
+            send(Cot.emergency(identity(s), alertFix, emergency), priority = true)
         }
         BeaconStatus.update {
             it.copy(
+                fix = fixes.shown(now, s.accuracyLimitM), fixReportable = fix != null, accuracyLimitM = s.accuracyLimitM,
                 runState = runState, batteryPct = battery, effectiveIntervalSeconds = interval,
                 motion = if (adaptive) motion.motion else null,
                 udpError = if (s.udpBroadcast) udp?.lastError?.value else null,
@@ -191,9 +192,6 @@ class BeaconService : LifecycleService() {
     private fun onLocation(loc: Location) {
         val now = SystemClock.elapsedRealtime()
         val isGps = loc.provider == LocationManager.GPS_PROVIDER
-        // Network fixes only fill gaps; never overwrite a recent GPS fix.
-        if (!isGps && now - lastGpsElapsed < 15_000L) return
-        if (isGps) lastGpsElapsed = now
         val fix = Fix(
             lat = loc.latitude,
             lon = loc.longitude,
@@ -205,21 +203,30 @@ class BeaconService : LifecycleService() {
             timeMs = loc.time,
             source = if (isGps) "GPS" else "NETWORK",
         )
-        val first = lastFix == null
-        lastFix = fix
         // Timed by when the fix was taken, not when it arrived: delivery jitter isn't speed.
         val fixedAt = if (loc.elapsedRealtimeNanos > 0) loc.elapsedRealtimeNanos / 1_000_000 else now
-        if (motion.update(fixedAt, fix.lat, fix.lon, fix.speedMps, fix.ce)) reportNow = true
-        lastFixElapsed = now
-        BeaconStatus.update { it.copy(fix = fix) }
-        if (first) lastPliElapsed = 0L // report the first fix immediately
+        val limit = settings?.accuracyLimitM ?: BeaconSettings.DEFAULT_ACCURACY_LIMIT_M
+        val hadFix = fixes.reportable(now, limit) != null
+        // Too inaccurate (over the confidence limit), or a network fix while GPS is better: not reported.
+        if (fixes.offer(fix, isGps, fixedAt, now, limit)) {
+            if (motion.update(fixedAt, fix.lat, fix.lon, fix.speedMps, fix.ce)) reportNow = true
+            if (!hadFix) lastPliElapsed = 0L // report as soon as there is a good fix again
+        }
+        val reportable = fixes.reportable(now, limit) != null
+        BeaconStatus.update { it.copy(fix = fixes.shown(now, limit), fixReportable = reportable, accuracyLimitM = limit) }
+    }
+
+    /** The best position for an emergency: the reportable one, otherwise any (better than none). */
+    private fun emergencyFix(s: BeaconSettings): Fix? {
+        val now = SystemClock.elapsedRealtime()
+        return fixes.reportable(now, s.accuracyLimitM) ?: fixes.latest
     }
 
     private fun raiseEmergency(type: EmergencyType) {
         BeaconStatus.update { it.copy(emergency = type) }
         lastEmergencyElapsed = 0L
         val s = settings
-        val fix = lastFix
+        val fix = s?.let(::emergencyFix)
         if (s != null && fix != null) {
             lastEmergencyElapsed = SystemClock.elapsedRealtime()
             send(Cot.emergency(identity(s), fix, type), priority = true)
@@ -230,7 +237,7 @@ class BeaconService : LifecycleService() {
 
     private fun cancelEmergency() {
         val s = settings
-        val fix = lastFix
+        val fix = s?.let(::emergencyFix)
         if (BeaconStatus.state.value.emergency != null && s != null && fix != null) {
             send(Cot.emergencyCancel(identity(s), fix), priority = true)
         }
@@ -288,11 +295,13 @@ class BeaconService : LifecycleService() {
         val connected = app.connections.connectedCount()
         val text = when (state) {
             RunState.TRANSMITTING -> {
-                val f = lastFix
+                val f = fixes.reportable(SystemClock.elapsedRealtime(), s.accuracyLimitM)
                 (if (BeaconStatus.state.value.onSatellite) "Satellite · " else "") +
                     "${s.callsign} · $connected connected · " + (f?.let { Coordinates.format(it.lat, it.lon, s.coordFormat) } ?: "")
             }
-            RunState.WAITING_FOR_FIX -> "Waiting for GPS fix"
+            RunState.WAITING_FOR_FIX -> fixes.latest?.ce?.takeIf { it > s.accuracyLimitM }
+                ?.let { "Location accuracy ±%.0f m is over the %d m limit: not reporting".format(it, s.accuracyLimitM) }
+                ?: "Waiting for GPS fix"
             RunState.PAUSED_FOR_ATAK -> "Paused — ATAK is reporting your position"
             RunState.PAUSED_SATELLITE -> "Paused on satellite — satellite data is off in Settings"
             RunState.NO_SERVERS -> "No servers configured"

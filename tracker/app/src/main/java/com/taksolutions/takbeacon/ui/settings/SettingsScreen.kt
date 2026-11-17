@@ -29,6 +29,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.foundation.layout.width
+import kotlin.math.roundToInt
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -94,6 +98,7 @@ fun SettingsScreen(
     val mKeywords = "alert_keywords" in managedFields
     val mAlertAtak = "alert_while_paused_for_atak" in managedFields
     val mContacts = "show_contacts" in managedFields
+    val mAccuracy = "location_accuracy_m" in managedFields
     val adaptive = s.reportingMode == com.taksolutions.takbeacon.data.ReportingMode.ADAPTIVE
     CompositionLocalProvider(LocalSettingsLocked provides s.locked) {
     Column(
@@ -202,6 +207,10 @@ fun SettingsScreen(
                 style = MaterialTheme.typography.bodySmall, fontFamily = Mono,
                 color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp),
             )
+        }
+
+        Section("Location accuracy") {
+            AccuracyLimit(s.accuracyLimitM, managed = mAccuracy) { m -> onChange { it.copy(accuracyLimitM = m) } }
         }
 
         Section("Satellite") {
@@ -440,6 +449,54 @@ private fun ToggleRow(title: String, desc: String, checked: Boolean, enabled: Bo
         }
         Switch(checked = checked, onCheckedChange = onToggle, enabled = on)
     }
+}
+
+/**
+ * The location confidence limit: a slider for quick changes, a field to type an
+ * exact value. Fixes less accurate than this are not reported.
+ */
+@Composable
+private fun AccuracyLimit(limit: Int, managed: Boolean, onSave: (Int) -> Unit) {
+    val min = BeaconSettings.MIN_ACCURACY_LIMIT_M
+    val max = BeaconSettings.MAX_ACCURACY_LIMIT_M
+    val enabled = !managed && !LocalSettingsLocked.current
+    var slider by remember(limit) { mutableStateOf(limit.toFloat()) }
+    var typed by remember(limit) { mutableStateOf(limit.toString()) }
+    val typedValue = typed.toIntOrNull()?.takeIf { it in min..max }
+    val save = { typedValue?.let { if (it != limit) onSave(it) } }
+    Text(
+        (if (managed) "Set by your organization. " else "") +
+            "A position less accurate than this is not reported, so a weak signal doesn't put you in the wrong place. " +
+            "GPS or network (Wi-Fi, cell), whichever is accurate enough. Emergencies are always sent with the best position there is.",
+        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    Spacer(Modifier.height(8.dp))
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Slider(
+            value = slider,
+            // Snaps to 5 m (no step ticks: 99 of them only stripe the track).
+            onValueChange = { v -> slider = ((v / 5).roundToInt() * 5).coerceIn(min, max).toFloat(); typed = slider.roundToInt().toString() },
+            onValueChangeFinished = { onSave(slider.roundToInt().coerceIn(min, max)) },
+            valueRange = min.toFloat()..max.toFloat(),
+            enabled = enabled,
+            modifier = Modifier.weight(1f),
+        )
+        Spacer(Modifier.width(12.dp))
+        OutlinedTextField(
+            typed,
+            { v -> typed = v.filter(Char::isDigit).take(3); typed.toIntOrNull()?.takeIf { it in min..max }?.let { slider = it.toFloat() } },
+            label = { Text("Metres") }, singleLine = true, enabled = enabled,
+            isError = typedValue == null,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { save() }),
+            modifier = Modifier.width(104.dp).onFocusChanged { if (!it.isFocused) save() },
+        )
+    }
+    Text(
+        if (typedValue == null) "$min to $max m" else "Report only within ±$typedValue m · default ${BeaconSettings.DEFAULT_ACCURACY_LIMIT_M} m",
+        style = MaterialTheme.typography.bodySmall,
+        color = if (typedValue == null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 }
 
 enum class PinAction { SET, CHANGE, REMOVE, UNLOCK }

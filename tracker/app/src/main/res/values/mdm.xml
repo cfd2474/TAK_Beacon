@@ -44,6 +44,8 @@
     <string name="mdm_alert_while_atak_title">Priority alerts while paused for ATAK</string>
     <string name="mdm_show_contacts_title">Show other users on the map</string>
     <string name="mdm_show_contacts_desc">On: the map shows the other TAK users the server shares, and the user can message them from it. Off: only the device itself is shown. Leave unset to let the user choose; set, the user cannot change it.</string>
+    <string name="mdm_location_accuracy_title">Location accuracy limit (metres)</string>
+    <string name="mdm_location_accuracy_desc">Positions less accurate than this many metres (5 to 500) are not reported, from GPS or the network. The app default is 50. Leave unset to let the user choose; set, the user cannot change it.</string>
     <string name="mdm_alert_while_atak_desc">On: keyword alerts sound even while the beacon is paused because ATAK is running. Off: they stay silent then. Leave unset to let the user choose; set, the user cannot change it.</string>
     <string name="mdm_start_beacon_title">Start the beacon</string>
     <string name="mdm_start_beacon_desc">Turn the beacon on when this configuration arrives and whenever the device starts. The user can still stop it.</string>

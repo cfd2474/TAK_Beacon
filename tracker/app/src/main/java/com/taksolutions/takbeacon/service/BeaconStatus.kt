@@ -11,7 +11,11 @@ enum class RunState { STOPPED, WAITING_FOR_FIX, TRANSMITTING, PAUSED_FOR_ATAK, P
 
 data class TrackerState(
     val runState: RunState = RunState.STOPPED,
+    /** The position shown: the one being reported, or else the latest fix (see [fixReportable]). */
     val fix: Fix? = null,
+    /** [fix] is accurate enough to report (within [accuracyLimitM]). */
+    val fixReportable: Boolean = false,
+    val accuracyLimitM: Int = com.taksolutions.takbeacon.data.BeaconSettings.DEFAULT_ACCURACY_LIMIT_M,
     val lastSentMs: Long? = null,
     val emergency: EmergencyType? = null,
     val batteryPct: Int? = null,

@@ -43,7 +43,8 @@ import kotlin.math.hypot
 import kotlin.math.sin
 
 /**
- * An OpenStreetMap view with the operator's position and the other users the
+ * An OpenStreetMap view with the operator's position (an arrow along [heading],
+ * a dot when it is unknown, inside a circle of [accuracyM]) and the other users the
  * server reports. It follows the operator until the map is dragged; the
  * locate button brings it back. [onFullScreen] adds the full-screen button
  * ([expanded]: it shows the exit icon instead).
@@ -52,6 +53,8 @@ import kotlin.math.sin
 fun BeaconMap(
     lat: Double,
     lon: Double,
+    heading: Float?,
+    accuracyM: Double?,
     dark: Boolean,
     color: Color,
     modifier: Modifier = Modifier,
@@ -77,7 +80,7 @@ fun BeaconMap(
         }
     }
     val others = remember { ContactsOverlay { tap(it) } }
-    val dot = remember { PositionDot() }
+    val dot = remember { PositionMarker() }
     DisposableEffect(map) {
         map.overlays.add(others)
         map.overlays.add(dot)
@@ -105,7 +108,9 @@ fun BeaconMap(
             m.overlayManager.tilesOverlay.setColorFilter(if (dark) TilesOverlay.INVERT_COLORS else null)
             val p = GeoPoint(lat, lon)
             dot.point = p
-            dot.fill.color = color.toArgb()
+            dot.heading = heading
+            dot.accuracyM = accuracyM
+            dot.setColor(color.toArgb())
             others.contacts = contacts
             if (follow) m.controller.setCenter(p)
             m.invalidate()
@@ -130,22 +135,73 @@ fun BeaconMap(
     }
 }
 
-/** The operator's position: a fixed-size dot with a white ring, whatever the zoom. */
-private class PositionDot : Overlay() {
+/**
+ * The operator's position: a navigation arrow pointing along the heading (a dot
+ * when there is none), fixed size whatever the zoom, inside a faint circle as
+ * large as the fix's accuracy.
+ */
+private class PositionMarker : Overlay() {
     var point: GeoPoint? = null
-    val fill = Paint(Paint.ANTI_ALIAS_FLAG)
+    var heading: Float? = null
+    var accuracyM: Double? = null
+    private val fill = Paint(Paint.ANTI_ALIAS_FLAG)
     private val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = android.graphics.Color.WHITE; style = Paint.Style.STROKE; strokeWidth = 6f
+        color = android.graphics.Color.WHITE; style = Paint.Style.STROKE; strokeJoin = Paint.Join.ROUND
     }
+    private val area = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val areaEdge = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
+    private val arrow = Path()
+    private var arrowSize = 0f
     private val px = android.graphics.Point()
+
+    fun setColor(argb: Int) {
+        fill.color = argb
+        area.color = argb; area.alpha = 40
+        areaEdge.color = argb; areaEdge.alpha = 110
+    }
 
     override fun draw(canvas: android.graphics.Canvas, mapView: MapView, shadow: Boolean) {
         if (shadow) return
         val p = point ?: return
+        val density = mapView.context.resources.displayMetrics.density
         mapView.projection.toPixels(p, px)
-        val r = 14f * mapView.context.resources.displayMetrics.density
-        canvas.drawCircle(px.x.toFloat(), px.y.toFloat(), r, fill)
-        canvas.drawCircle(px.x.toFloat(), px.y.toFloat(), r, ring)
+        val x = px.x.toFloat()
+        val y = px.y.toFloat()
+        val r = 14f * density
+        accuracyM?.takeIf { it.isFinite() && it > 0 }?.let { m ->
+            val radius = mapView.projection.metersToPixels(m.toFloat(), p.latitude, mapView.zoomLevelDouble)
+            if (radius > r) {
+                areaEdge.strokeWidth = 1.5f * density
+                canvas.drawCircle(x, y, radius, area)
+                canvas.drawCircle(x, y, radius, areaEdge)
+            }
+        }
+        val h = heading
+        if (h == null) {
+            ring.strokeWidth = 3f * density
+            canvas.drawCircle(x, y, r, fill)
+            canvas.drawCircle(x, y, r, ring)
+            return
+        }
+        val s = 17f * density
+        if (s != arrowSize) {
+            // Tip up (north), notched tail, centred on the position.
+            arrow.reset()
+            arrow.moveTo(0f, -s)
+            arrow.lineTo(0.78f * s, 0.85f * s)
+            arrow.lineTo(0f, 0.42f * s)
+            arrow.lineTo(-0.78f * s, 0.85f * s)
+            arrow.close()
+            arrowSize = s
+        }
+        ring.strokeWidth = 2.5f * density
+        canvas.save()
+        canvas.translate(x, y)
+        // The map is north-up unless it was rotated; the arrow allows for either.
+        canvas.rotate(h + mapView.mapOrientation)
+        canvas.drawPath(arrow, fill)
+        canvas.drawPath(arrow, ring)
+        canvas.restore()
     }
 }
 

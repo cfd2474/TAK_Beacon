@@ -45,6 +45,8 @@ data class ManagedConfig(
     val alertWhilePausedForAtak: Boolean? = null,
     /** Other users on the map; null when the MDM doesn't set it. */
     val showContacts: Boolean? = null,
+    /** Location confidence limit in metres; null when the MDM doesn't set it. */
+    val accuracyLimitM: Int? = null,
     /** Turn the beacon on when the config arrives and on every boot (the user can still stop it). */
     val startBeacon: Boolean = false,
 ) {
@@ -64,6 +66,7 @@ data class ManagedConfig(
             if (alertKeywords != null) add(FIELD_ALERT_KEYWORDS)
             if (alertWhilePausedForAtak != null) add(FIELD_ALERT_WHILE_ATAK)
             if (showContacts != null) add(FIELD_SHOW_CONTACTS)
+            if (accuracyLimitM != null) add(FIELD_ACCURACY_LIMIT)
             if (startBeacon) add(FIELD_START_ON_BOOT)
         }
 
@@ -96,6 +99,7 @@ data class ManagedConfig(
         const val FIELD_ALERT_KEYWORDS = "alert_keywords"
         const val FIELD_ALERT_WHILE_ATAK = "alert_while_paused_for_atak"
         const val FIELD_SHOW_CONTACTS = "show_contacts"
+        const val FIELD_ACCURACY_LIMIT = "location_accuracy_m"
 
         // Restriction keys (res/xml/app_restrictions.xml). Secrets contain "password"
         // so MDM consoles mask them.
@@ -122,6 +126,7 @@ data class ManagedConfig(
         const val K_ALERT_KEYWORDS = "alert_keywords"
         const val K_ALERT_WHILE_ATAK = "alert_while_paused_for_atak"
         const val K_SHOW_CONTACTS = "show_contacts"
+        const val K_ACCURACY_LIMIT = "location_accuracy_m"
 
         /**
          * Reads a restrictions bundle flattened to a map. Returns null when nothing usable
@@ -147,6 +152,13 @@ data class ManagedConfig(
                 is String -> when (v.trim().lowercase()) { "true" -> true; "false" -> false; else -> null }
                 else -> null
             }
+            /** An integer the MDM may leave unset (null); out of [range] counts as unset. */
+            fun intOrNull(k: String, range: IntRange): Int? = when (val v = values[k]) {
+                is Int -> v
+                is Long -> v.toInt()
+                is String -> v.trim().toIntOrNull()
+                else -> null
+            }?.takeIf { it in range }
             fun bytes(k: String) = str(k)?.let { runCatching { decodeBase64(it.replace(Regex("\\s"), "")) }.getOrNull() }
                 ?.takeIf { it.isNotEmpty() }
 
@@ -183,6 +195,8 @@ data class ManagedConfig(
                 alertKeywords = str(K_ALERT_KEYWORDS)?.let(com.taksolutions.takbeacon.chat.KeywordAlert::parse)?.takeIf { it.isNotEmpty() },
                 alertWhilePausedForAtak = boolOrNull(K_ALERT_WHILE_ATAK),
                 showContacts = boolOrNull(K_SHOW_CONTACTS),
+                accuracyLimitM = intOrNull(K_ACCURACY_LIMIT,
+                    com.taksolutions.takbeacon.data.BeaconSettings.MIN_ACCURACY_LIMIT_M..com.taksolutions.takbeacon.data.BeaconSettings.MAX_ACCURACY_LIMIT_M),
             )
             return c.takeIf { it.hasServer || it.managedFields.isNotEmpty() || it.version != null }
         }

@@ -53,6 +53,7 @@ class SettingsRepository(private val context: Context) {
         val ALERT_KEYWORDS = stringPreferencesKey("alert_keywords")
         val ALERT_WHILE_ATAK = booleanPreferencesKey("alert_while_paused_for_atak")
         val SHOW_CONTACTS = booleanPreferencesKey("show_contacts")
+        val ACCURACY_LIMIT = intPreferencesKey("accuracy_limit_m")
     }
 
     val settings: Flow<BeaconSettings> = context.settingsStore.data.map(::settingsFrom)
@@ -112,6 +113,7 @@ class SettingsRepository(private val context: Context) {
             p[K.ALERT_KEYWORDS] = n.alertKeywords.joinToString("\n")
             p[K.ALERT_WHILE_ATAK] = n.alertWhilePausedForAtak
             p[K.SHOW_CONTACTS] = n.showContacts
+            p[K.ACCURACY_LIMIT] = n.accuracyLimitM.coerceIn(BeaconSettings.MIN_ACCURACY_LIMIT_M, BeaconSettings.MAX_ACCURACY_LIMIT_M)
         }
     }
 
@@ -150,6 +152,7 @@ class SettingsRepository(private val context: Context) {
         alertKeywords = p[K.ALERT_KEYWORDS]?.let(com.taksolutions.takbeacon.chat.KeywordAlert::parse) ?: emptyList(),
         alertWhilePausedForAtak = p[K.ALERT_WHILE_ATAK] ?: false,
         showContacts = p[K.SHOW_CONTACTS] ?: true,
+        accuracyLimitM = p[K.ACCURACY_LIMIT] ?: BeaconSettings.DEFAULT_ACCURACY_LIMIT_M,
     )
 
     companion object {

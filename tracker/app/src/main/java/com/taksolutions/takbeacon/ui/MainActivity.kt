@@ -440,7 +440,7 @@ class MainActivity : ComponentActivity() {
             val mapFix = tracker.fix?.takeIf { s.showMap && !tracker.onSatellite }
             if (fullMap && tab == 0 && mapFix != null) {
                 com.taksolutions.takbeacon.ui.home.FullScreenMap(
-                    settings = s, lat = mapFix.lat, lon = mapFix.lon,
+                    settings = s, fix = mapFix,
                     color = when {
                         tracker.emergency != null -> BeaconTheme.status.sos
                         tracker.runState == com.taksolutions.takbeacon.service.RunState.TRANSMITTING -> BeaconTheme.status.live

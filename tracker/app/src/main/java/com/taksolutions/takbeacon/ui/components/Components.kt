@@ -89,11 +89,12 @@ fun StatusDot(color: Color, size: Dp = 10.dp) {
 
 /** Small label/value pair for the readout grid. */
 @Composable
-fun Readout(label: String, value: String, modifier: Modifier = Modifier) {
+fun Readout(label: String, value: String, modifier: Modifier = Modifier, valueColor: Color = Color.Unspecified) {
     Column(modifier) {
         Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(2.dp))
-        Text(value, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+        Text(value, style = MaterialTheme.typography.titleMedium,
+            color = if (valueColor == Color.Unspecified) MaterialTheme.colorScheme.onSurface else valueColor)
     }
 }
 

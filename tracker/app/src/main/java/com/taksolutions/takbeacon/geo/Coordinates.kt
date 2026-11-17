@@ -2,6 +2,7 @@ package com.taksolutions.takbeacon.geo
 
 import com.taksolutions.takbeacon.data.CoordFormat
 import com.taksolutions.takbeacon.data.SpeedUnit
+import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.floor
@@ -14,8 +15,18 @@ object Coordinates {
 
     fun format(lat: Double, lon: Double, format: CoordFormat): String = when (format) {
         CoordFormat.DD -> "%.6f, %.6f".format(lat, lon)
+        CoordFormat.DDM -> "${ddm(lat, "N", "S")}  ${ddm(lon, "E", "W")}"
         CoordFormat.DMS -> "${dms(lat, "N", "S")}  ${dms(lon, "E", "W")}"
         CoordFormat.MGRS -> mgrs(lat, lon) ?: "%.6f, %.6f".format(lat, lon)
+    }
+
+    /** Degrees and decimal minutes (DD MM.MMM), e.g. 33°07.407'N: a thousandth of a minute is under 2 m. */
+    fun ddm(value: Double, pos: String, neg: String): String {
+        val a = abs(value)
+        var d = floor(a).toInt()
+        var m = (a - d) * 60
+        if (m >= 59.9995) { m = 0.0; d += 1 }
+        return "%d°%06.3f'%s".format(Locale.US, d, m, if (value >= 0) pos else neg)
     }
 
     fun dms(value: Double, pos: String, neg: String): String {

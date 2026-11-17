@@ -11,7 +11,7 @@
 
 #show: userguide.with(
    plugin-name: "TAK Beacon",
-   plugin-version: "1.4.7",
+   plugin-version: "1.4.8",
    platform: "ATAK",
    platform-version: "5.6 \u{2013} 5.8",
 )
@@ -166,7 +166,7 @@ Reporting resumes as soon as ATAK is closed or stops. An active emergency is nev
 #tak-slide[
 = The Beacon screen and emergencies
 #toolbox.side-by-side(columns: (7fr, 3fr))[
-The Beacon screen shows your position (tap *MGRS* to change the format), accuracy, source and battery, a map and your servers.
+The Beacon screen shows your position (tap *MGRS* to change the format: DD, DD MM.MMM, DMS or MGRS), accuracy, source and battery, a map (you are the arrow) and your servers.
 
 The map also shows the other TAK users your server shares, as dots in their team colour with their callsign (faded once their reports are being missed). Tap one for distance, bearing and last report, and *Message* to write to them. Drag the map to look around; the locate button follows you again. The full-screen button opens a larger map. Turn other users off in *Settings, Display, Show other users*.
 
@@ -267,6 +267,7 @@ If Android no longer shows the prompt (it was refused twice), TAK Beacon opens i
 - *Reports stop with the screen off*: allow location *All the time*, and set TAK Beacon's battery use to *Unrestricted* (*Settings, Startup and battery*).
 - *Start or Stop does nothing*: TAK Beacon is locked; unlock it with its PIN.
 - *Waiting for GPS*: TAK Beacon needs a location fix before it reports; check that location is on.
+- *Weak location*: the position is less accurate than *Settings, Location accuracy* (50 m by default), so it is not reported until a good GPS or network fix arrives. Emergencies are always sent.
 - *Red missing-permissions banner*: tap it and allow what it lists.
 ]
 

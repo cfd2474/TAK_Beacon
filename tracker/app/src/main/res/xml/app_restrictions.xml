@@ -156,6 +156,13 @@
         android:title="@string/mdm_show_contacts_title"
         android:description="@string/mdm_show_contacts_desc" />
 
+    <!-- No defaultValue: unset leaves it to the user. -->
+    <restriction
+        android:key="location_accuracy_m"
+        android:restrictionType="integer"
+        android:title="@string/mdm_location_accuracy_title"
+        android:description="@string/mdm_location_accuracy_desc" />
+
     <restriction
         android:key="start_beacon"
         android:restrictionType="bool"

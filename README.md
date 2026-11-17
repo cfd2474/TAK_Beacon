@@ -36,8 +36,11 @@ installs and drives it.
 - **ATAK integration** ([docs/bridge-protocol.md](docs/bridge-protocol.md)): the
   plugin can push ATAK's server, certificates and identity, start and stop
   tracking, and pause the beacon while ATAK is running.
-- Team colour and role, DD/DMS/MGRS, an OpenStreetMap map with a dark mode and
-  a full-screen view, kiosk lock, and start on boot.
+- Team colour and role, DD/DD MM.MMM/DMS/MGRS, an OpenStreetMap map with a
+  heading arrow, a dark mode and a full-screen view, kiosk lock, and start on boot.
+- **Location accuracy limit:** positions less accurate than a set limit (50 m by
+  default) are not reported; GPS or network, whichever is accurate enough.
+  Emergencies always go out. Can be set by MDM.
 - **Other users on the map:** the TAK users the server shares, in team colours
   with callsign and heading; tap one for distance and bearing, or to message
   them. Can be turned off (also by MDM).

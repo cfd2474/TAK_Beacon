@@ -39,6 +39,7 @@ the user's own setting.
 | `alert_keywords` | string | (none) | Priority-alert keywords, comma separated (up to 50). A received chat containing one sounds an alarm at full volume until acknowledged, at most 2 minutes. Replaces the user's list, which becomes read only (1.4.3+). |
 | `alert_while_paused_for_atak` | bool | (unset) | `true`: priority alerts also sound while the beacon is paused because ATAK is running; `false`: they stay silent then. Unset leaves it to the user (default off); set, it is read only (1.4.5+). |
 | `show_contacts` | bool | (unset) | `true`: the map shows the other TAK users the server shares (and the user can message them from it); `false`: only the device itself. Unset leaves it to the user (default on); set, it is read only (1.4.7+). |
+| `location_accuracy_m` | integer 5-500 | (unset) | Location accuracy limit in metres: positions less accurate than this are not reported, from GPS or the network (emergencies always are). The app default is 50. Unset leaves it to the user; set, it is read-only on the device (1.4.8+). |
 | `start_beacon` | bool | false | Turn the beacon on when the configuration arrives and at every boot. The user can still stop it. |
 
 Keys holding secrets contain "password", so consoles that mask such keys (ATLAS

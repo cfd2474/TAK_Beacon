@@ -116,9 +116,32 @@ emergency is never paused.
 unit* (the default, as ATAK reports itself), *Vehicle*, *Aircraft* or *Boat*.
 Your organization can also set it.
 
+### Location accuracy
+
+**Settings → Location accuracy** sets how accurate a position must be to be
+reported: 50 m by default, 5 to 500 m with the slider or typed in. A position
+less accurate than that is not sent, so a weak signal (indoors, among tall
+buildings) doesn't put you in the wrong place on the map:
+
+- GPS or network (Wi-Fi, cell) positions both count, when they are accurate
+  enough. GPS is preferred while it is good; a network position takes over
+  when GPS has gone quiet or is worse.
+- A position held while no fresh fix arrives counts as less accurate as time
+  passes (at least walking pace), and is never reported once it is 5 minutes
+  old.
+- While the position is too poor, the Beacon screen shows *Weak location*, the
+  accuracy in red, and the notification says reports have stopped. Reporting
+  resumes as soon as a good fix arrives.
+- Emergencies are always sent, with the best position there is.
+
+Your organization can set the limit.
+
 ### The map and other users
 
-The Beacon screen's map shows you, and the other TAK users your server shares
+The Beacon screen's map shows you as an arrow pointing where you are heading
+(your direction of travel while moving, the compass while still; a dot when
+neither is known), inside a faint circle as large as your position's accuracy.
+It also shows the other TAK users your server shares
 with you (the same users ATAK would show, depending on your groups), while the
 beacon is connected:
 

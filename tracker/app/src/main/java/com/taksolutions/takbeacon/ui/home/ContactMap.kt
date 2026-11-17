@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.taksolutions.takbeacon.contacts.Contact
+import com.taksolutions.takbeacon.cot.Fix
 import com.taksolutions.takbeacon.data.BeaconSettings
 import com.taksolutions.takbeacon.geo.Coordinates
 import com.taksolutions.takbeacon.ui.components.StatusDot
@@ -49,8 +50,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun ContactMap(
     settings: BeaconSettings,
-    lat: Double,
-    lon: Double,
+    fix: Fix,
     color: Color,
     contacts: List<Contact>,
     onMessage: ((Contact) -> Unit)?,
@@ -58,11 +58,14 @@ fun ContactMap(
     onFullScreen: (() -> Unit)? = null,
     expanded: Boolean = false,
 ) {
+    val lat = fix.lat
+    val lon = fix.lon
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
     // Kept so the details stay readable if the user drops off the map meanwhile.
     var last by remember { mutableStateOf<Contact?>(null) }
     BeaconMap(
-        lat = lat, lon = lon, dark = settings.darkMap, color = color, modifier = modifier,
+        lat = lat, lon = lon, heading = rememberHeading(fix), accuracyM = fix.ce,
+        dark = settings.darkMap, color = color, modifier = modifier,
         contacts = contacts, onContact = { selected = it.uid; last = it },
         onFullScreen = onFullScreen, expanded = expanded,
     )
@@ -77,8 +80,7 @@ fun ContactMap(
 @Composable
 fun FullScreenMap(
     settings: BeaconSettings,
-    lat: Double,
-    lon: Double,
+    fix: Fix,
     color: Color,
     contacts: List<Contact>,
     onMessage: ((Contact) -> Unit)?,
@@ -86,7 +88,7 @@ fun FullScreenMap(
 ) {
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-            ContactMap(settings, lat, lon, color, contacts, onMessage, Modifier.fillMaxSize(), onFullScreen = onClose, expanded = true)
+            ContactMap(settings, fix, color, contacts, onMessage, Modifier.fillMaxSize(), onFullScreen = onClose, expanded = true)
             Row(Modifier.align(Alignment.TopStart).safeDrawingPadding().padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
                     onClick = onClose,
