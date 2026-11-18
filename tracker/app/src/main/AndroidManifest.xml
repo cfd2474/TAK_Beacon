@@ -141,6 +141,11 @@
             android:name=".chat.ChatReplyReceiver"
             android:exported="false" />
 
+        <!-- Android Auto messaging: chat notifications (MessagingStyle, Reply, Mark as read). -->
+        <meta-data
+            android:name="com.google.android.gms.car.application"
+            android:resource="@xml/automotive_app_desc" />
+
         <receiver
             android:name=".chat.PriorityAlertReceiver"
             android:exported="false" />

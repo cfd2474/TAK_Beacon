@@ -246,6 +246,11 @@ sent to you, to **All Chat Rooms** and to your team's room. Each one notifies
 - While the beacon is paused for ATAK, messages are saved without a
   notification: ATAK on the same phone shows them.
 
+- **Android Auto:** with the phone connected to Android Auto, new messages
+  appear on the car screen and are read aloud; answer by voice with *Reply*.
+  This needs messaging on (full, not read-only), TAK Beacon unlocked, and its
+  notifications allowed. Priority alerts sound on the phone only.
+
 Messages are kept on the phone, encrypted, for up to 30 days (500 at most).
 
 ### Priority alerts

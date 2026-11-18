@@ -238,14 +238,33 @@ class ChatManager(private val app: BeaconApp) {
             b.addAction(
                 NotificationCompat.Action.Builder(R.drawable.ic_stat_beacon, "Reply", replyIntent)
                     .addRemoteInput(input).setAllowGeneratedReplies(false)
-                    .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_REPLY).build()
+                    .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_REPLY)
+                    // Sent in the background: also from Android Auto, by voice.
+                    .setShowsUserInterface(false).build()
             )
         }
+        // Mark as read (Android Auto needs it to show a conversation; also handy on a watch).
+        val readIntent = PendingIntent.getBroadcast(
+            app, key.hashCode(),
+            Intent(app, ChatReplyReceiver::class.java).setAction(ACTION_MARK_READ).putExtra(EXTRA_THREAD, key),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        b.addInvisibleAction(
+            NotificationCompat.Action.Builder(R.drawable.ic_stat_beacon, "Mark as read", readIntent)
+                .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_MARK_AS_READ)
+                .setShowsUserInterface(false).build()
+        )
         runCatching { NotificationManagerCompat.from(app).notify(TAG, key.hashCode(), b.build()) }
     }
 
     fun cancelNotification(key: String) {
         NotificationManagerCompat.from(app).cancel(TAG, key.hashCode())
+    }
+
+    /** From the notification's Mark as read action (Android Auto, watches). */
+    fun markReadFromNotification(key: String) {
+        markRead(key)
+        cancelNotification(key)
     }
 
     /** From the notification's Reply action. */
@@ -262,17 +281,22 @@ class ChatManager(private val app: BeaconApp) {
         private const val GROUP = "chat"
         const val ACTION_OPEN_THREAD = "com.taksolutions.takbeacon.OPEN_THREAD"
         const val ACTION_REPLY = "com.taksolutions.takbeacon.CHAT_REPLY"
+        const val ACTION_MARK_READ = "com.taksolutions.takbeacon.CHAT_MARK_READ"
         const val EXTRA_THREAD = "thread"
         const val KEY_REPLY = "reply"
         val QUICK_REPLIES = listOf("Copy", "En route", "Need assistance")
     }
 }
 
-/** The notification's inline Reply. */
+/** The notification's inline Reply and Mark as read (on the phone, a watch or Android Auto). */
 class ChatReplyReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action != ChatManager.ACTION_REPLY) return
         val key = intent.getStringExtra(ChatManager.EXTRA_THREAD) ?: return
+        if (intent.action == ChatManager.ACTION_MARK_READ) {
+            BeaconApp.from(context).chat.markReadFromNotification(key)
+            return
+        }
+        if (intent.action != ChatManager.ACTION_REPLY) return
         val text = RemoteInput.getResultsFromIntent(intent)?.getCharSequence(ChatManager.KEY_REPLY)?.toString() ?: return
         BeaconApp.from(context).chat.replyFromNotification(key, text)
     }

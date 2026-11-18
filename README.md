@@ -60,7 +60,8 @@ installs and drives it.
   vehicle turns; longer on low battery; never faster than satellite allows.
 - **TAK chat:** receives direct, All Chat Rooms and team messages while the
   beacon is connected, with notifications, quick and inline replies, and
-  delivered/read receipts; read only while locked.
+  delivered/read receipts; read only while locked. Works with **Android Auto**
+  (messages read aloud, voice reply).
 - **Priority alerts:** keywords you choose turn a matching message into an
   alarm at full volume (even on silent) until acknowledged, up to 2 minutes.
 - **Map symbol** (CoT type: ground unit, vehicle, aircraft, boat) and UDP
