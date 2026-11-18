@@ -116,6 +116,13 @@ emergency is never paused.
 unit* (the default, as ATAK reports itself), *Vehicle*, *Aircraft* or *Boat*.
 Your organization can also set it.
 
+### Your position
+
+The Beacon screen shows your position in the format of your choice: tap the
+format name (*MGRS*, *DD*, *DDM* or *DMS*) beside it to switch, or set it in
+**Settings → Display**. **Tap the coordinates to copy them** to the clipboard,
+as shown, to paste into a message or another app.
+
 ### Location accuracy
 
 **Settings → Location accuracy** sets how accurate a position must be to be
